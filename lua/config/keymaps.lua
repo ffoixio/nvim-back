@@ -1,4 +1,4 @@
--- Keymaps (loaded on VeryLazy, after plugins like snacks.nvim are available)
+-- 键位（VeryLazy 时加载，依赖 snacks 等插件；desc 字段用于 which-key 提示）
 local map = vim.keymap.set
 local cmp = require("util.cmp")
 local format = require("util.format")
@@ -211,3 +211,7 @@ map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 
 -- lua
 Snacks.keymap.set({ "n", "x" }, "<localleader>r", function() Snacks.debug.run() end, { desc = "Run Lua", ft = "lua" })
+
+-- 配置
+map("n", "<leader>R", "<cmd>luafile $MYVIMRC<cr>", { desc = "重载配置" })
+map("n", "<leader>en", "<cmd>edit $MYVIMRC<cr>", { desc = "打开配置入口" })

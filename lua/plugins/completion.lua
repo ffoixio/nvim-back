@@ -1,5 +1,8 @@
 local cmp = require("util.cmp")
 
+-- 补全引擎支持 AI source 时，用 AI 代替内联建议
+vim.g.ai_cmp = true
+
 return {
   {
     "saghen/blink.cmp",

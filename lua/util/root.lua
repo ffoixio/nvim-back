@@ -1,5 +1,8 @@
 local U = require("util.init")
 
+-- LSP 根目录检测时忽略的 server
+vim.g.root_lsp_ignore = { "copilot" }
+
 local M = setmetatable({}, {
   __call = function(m, ...)
     return m.get(...)

@@ -1,13 +1,3 @@
--- 强制 .v/.vh 识别为 verilog（nvim 默认按内容猜成 vimscript/vlang）
-vim.filetype.add({
-  extension = {
-    v = "verilog",
-    vh = "verilog",
-    sv = "systemverilog",
-    svh = "systemverilog",
-  },
-})
-
 return {
   -- 语法高亮
   {

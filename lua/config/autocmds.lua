@@ -1,8 +1,20 @@
+-- 自动命令（随 config.lazy 最早加载，无插件依赖）
+
+-- 强制 .v/.vh/.sv/.svh 文件类型（绕过内置 detect.v 的内容猜测）
+vim.filetype.add({
+  extension = {
+    v = "verilog",
+    vh = "systemverilog",
+    sv = "systemverilog",
+    svh = "systemverilog",
+  },
+})
+
 local function augroup(name)
   return vim.api.nvim_create_augroup("config_" .. name, { clear = true })
 end
 
--- Check if we need to reload the file when it changed
+-- 窗口获得焦点 / 终端退出时，检查文件是否被外部修改
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = augroup("checktime"),
   callback = function()
@@ -12,7 +24,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   end,
 })
 
--- Highlight on yank
+-- 复制(yank)时高亮被复制的区域
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup("highlight_yank"),
   callback = function()
@@ -20,7 +32,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
--- resize splits if window got resized
+-- 窗口尺寸变化时重新均分分窗
 vim.api.nvim_create_autocmd({ "VimResized" }, {
   group = augroup("resize_splits"),
   callback = function()
@@ -30,7 +42,7 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
   end,
 })
 
--- go to last loc when opening a buffer
+-- 打开 buffer 时回到上次光标位置
 vim.api.nvim_create_autocmd("BufReadPost", {
   group = augroup("last_loc"),
   callback = function(event)
@@ -48,7 +60,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end,
 })
 
--- close some filetypes with <q>
+-- 某些文件类型用 <q> 关闭
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_with_q"),
   pattern = {
@@ -77,13 +89,13 @@ vim.api.nvim_create_autocmd("FileType", {
       end, {
         buffer = event.buf,
         silent = true,
-        desc = "Quit buffer",
+        desc = "关闭窗口",
       })
     end)
   end,
 })
 
--- make it easier to close man-files when opened inline
+-- man 文件内联打开时不列入 buffer 列表
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("man_unlisted"),
   pattern = { "man" },
@@ -92,7 +104,7 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- wrap and check for spell in text filetypes
+-- 文本类文件类型自动折行 + 拼写检查
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("wrap_spell"),
   pattern = { "text", "plaintex", "typst", "gitcommit", "markdown" },
@@ -102,7 +114,7 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Fix conceallevel for json files
+-- json 文件不隐藏引号（conceallevel 置 0）
 vim.api.nvim_create_autocmd({ "FileType" }, {
   group = augroup("json_conceal"),
   pattern = { "json", "jsonc", "json5" },
@@ -111,7 +123,7 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
   end,
 })
 
--- Auto create dir when saving a file, in case some intermediate directory does not exist
+-- 保存时自动创建缺失的父目录
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   group = augroup("auto_create_dir"),
   callback = function(event)
@@ -120,5 +132,28 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     end
     local file = vim.uv.fs_realpath(event.match) or event.match
     vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+  end,
+})
+
+-- 插入时保持光标距底部至少 scrolloff 行（避免光标贴底）
+vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI" }, {
+  group = augroup("insert_bottom_margin"),
+  callback = function()
+    local soff = vim.o.scrolloff
+    if soff == 0 then
+      return
+    end
+    local cursor = vim.fn.line(".")
+    local lc = vim.fn.line("$")
+    if cursor + soff > lc then
+      local wh = vim.fn.winheight(0)
+      local new_top = cursor - wh + soff + 1
+      new_top = math.max(1, math.min(new_top, lc))
+      if new_top > vim.fn.line("w0") then
+        local view = vim.fn.winsaveview()
+        view.topline = new_top
+        vim.fn.winrestview(view)
+      end
+    end
   end,
 })

@@ -1,6 +1,11 @@
 local U = require("util.init")
 local lualine_util = require("util.lualine")
 
+-- snacks 动画开关
+vim.g.snacks_animate = true
+-- lualine 显示 Trouble 符号位置
+vim.g.trouble_lualine = true
+
 -- animations
 
 -- Animates cursor movement with a smear effect.

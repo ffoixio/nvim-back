@@ -1,90 +1,93 @@
+-- 基础选项（无插件依赖，随 config.lazy 最早加载）
+-- 查询：:h option-list（全量）、:set <option>?（当前值）、:h '<option>'（详情）
+
+-- 键位前缀（必须在 lazy.setup 之前设置，插件的 <leader> 键依赖它）
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- 默认主题：tokyonight / catppuccin / habamax
+-- 默认主题：tokyonight / catppuccin / habamax（启动时加载，见 config.lazy）
 vim.g.colorscheme = "catppuccin"
-
--- auto format
-vim.g.autoformat = false
-
--- Snacks animations (set to false to globally disable all snacks animations)
-vim.g.snacks_animate = true
-
--- if the completion engine supports the AI source, use that instead of inline suggestions
-vim.g.ai_cmp = true
-
--- root dir detection
-vim.g.root_spec = { "lsp", { ".git", "lua" }, "cwd" }
-
--- LSP servers to ignore when detecting the LSP root
-vim.g.root_lsp_ignore = { "copilot" }
-
--- show the current document symbols location from Trouble in lualine
-vim.g.trouble_lualine = true
 
 local opt = vim.opt
 
-opt.autowrite = true -- Enable auto write
--- only set clipboard if not in ssh, to make sure the OSC 52 integration works automatically.
-opt.clipboard = vim.env.SSH_CONNECTION and "" or "unnamedplus" -- Sync with system clipboard
-opt.completeopt = "menu,menuone,noselect"
-opt.conceallevel = 2 -- Hide * markup for bold and italic, but not markers with substitutions
-opt.confirm = true -- Confirm to save changes before exiting modified buffer
-opt.cursorline = true -- Enable highlighting of the current line
-opt.expandtab = true -- Use spaces instead of tabs
-opt.fillchars = {
-  foldopen = "",
-  foldclose = "",
-  fold = " ",
-  foldsep = " ",
-  diff = "╱",
-  eob = " ",
-}
-opt.foldlevel = 99
-opt.foldmethod = "indent"
-opt.foldtext = ""
-opt.formatexpr = "v:lua.require('util.format').formatexpr()"
-opt.formatoptions = "jcroqlnt" -- tcqj
-opt.grepformat = "%f:%l:%c:%m"
-opt.grepprg = "rg --vimgrep"
-opt.ignorecase = true -- Ignore case
-opt.inccommand = "nosplit" -- preview incremental substitute
-opt.jumpoptions = "view"
-opt.laststatus = 3 -- global statusline
-opt.linebreak = true -- Wrap lines at convenient points
-opt.list = true -- Show some invisible characters (tabs...)
-opt.mouse = "a" -- Enable mouse mode
-opt.number = true -- Print line number
-opt.pumblend = 10 -- Popup blend
-opt.pumheight = 10 -- Maximum number of entries in a popup
-opt.relativenumber = true -- Relative line numbers
-opt.ruler = false -- Disable the default ruler
-opt.scrolloff = 4 -- Lines of context
-opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" }
-opt.shiftround = true -- Round indent
-opt.shiftwidth = 2 -- Size of an indent
-opt.shortmess:append({ W = true, I = true, c = true, C = true })
-opt.showmode = false -- Dont show mode since we have a statusline
-opt.sidescrolloff = 8 -- Columns of context
-opt.signcolumn = "yes" -- Always show the signcolumn, otherwise it would shift the text each time
-opt.smartcase = true -- Don't ignore case with capitals
-opt.smartindent = true -- Insert indents automatically
-opt.smoothscroll = true
-opt.spelllang = { "en" }
-opt.splitbelow = true -- Put new windows below current
-opt.splitkeep = "screen"
-opt.splitright = true -- Put new windows right of current
-opt.statuscolumn = [[%!v:lua.require('util.statuscolumn').get()]]
-opt.tabstop = 2 -- Number of spaces tabs count for
-opt.termguicolors = true -- True color support
-opt.timeoutlen = 300 -- Lower than default (1000) to quickly trigger which-key
-opt.undofile = true
-opt.undolevels = 10000
-opt.updatetime = 200 -- Save swap file and trigger CursorHold
-opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
-opt.wildmode = "longest:full,full" -- Command-line completion mode
-opt.winminwidth = 5 -- Minimum window width
-opt.wrap = false -- Disable line wrap
+-- ===== 编辑行为 =====
+opt.expandtab = true -- Tab 输入展开为空格（默认 false）
+opt.tabstop = 4 -- 文件中 Tab 的显示宽度（默认 8）
+opt.shiftwidth = 4 -- >>/<</自动缩进宽度，与 tabstop 一致（默认 8）
+opt.shiftround = true -- >>/<< 缩进取整到 shiftwidth 倍数（默认 false）
+opt.smartindent = true -- 自动缩进（默认 false）
+opt.whichwrap = "b,s,h,l,<,>,[,]" -- 这些命令可跨行移动光标（默认 "b,s"）
+opt.virtualedit = "block" -- 可视块模式允许光标进入无字符区域（默认 ""）
+opt.autowrite = true -- 切换 buffer 前自动保存（默认 false）
 
--- Fix markdown indentation settings
+-- ===== 视觉与 UI =====
+opt.number = true -- 显示行号（默认 false）
+opt.relativenumber = true -- 相对行号，配合 <n>j/k 跳转（默认 false）
+opt.cursorline = true -- 高亮当前行（默认 false）
+opt.colorcolumn = "120" -- 第 120 列参考线（默认 "" 关闭）
+opt.signcolumn = "yes" -- 签名列常驻，避免诊断符号出现时文本抖动（默认 "auto"）
+opt.termguicolors = true -- 24 位真彩色（默认 false）
+opt.scrolloff = 4 -- 光标距上下边缘最小行数（默认 0）
+opt.sidescrolloff = 8 -- 光标距左右边缘最小列数（默认 0）
+opt.smoothscroll = true -- <C-e>/<C-y> 平滑滚动（默认 false）
+opt.list = true -- 显示不可见字符（默认 false）
+opt.listchars = { tab = "» ", trail = "·" } -- Tab 与行尾空格显示（默认仅 trail "-"）
+opt.fillchars = {
+  foldopen = "", -- 折叠打开符号
+  foldclose = "", -- 折叠关闭符号
+  fold = " ", -- 折叠列填充
+  foldsep = " ", -- 折叠分隔
+  diff = "╱", -- diff 删除填充
+  eob = " ", -- 隐藏 buffer 末尾的 ~
+}
+opt.conceallevel = 2 -- 隐藏 markdown 加粗/斜体等标记（默认 0）
+opt.laststatus = 3 -- 全局单条状态栏（默认 2）
+opt.showmode = false -- 不显示 "-- INSERT --"，状态栏已展示（默认 true）
+opt.ruler = false -- 不显示右下角行列，状态栏已展示（默认 true）
+opt.pumheight = 10 -- 补全菜单最大条目数（默认 0 不限制）
+opt.pumblend = 10 -- 补全菜单与背景混合透明度（默认 0）
+
+-- ===== 搜索 =====
+opt.ignorecase = true -- 搜索忽略大小写（默认 false）
+opt.smartcase = true -- 搜索串含大写时恢复大小写敏感（默认 false）
+opt.inccommand = "nosplit" -- 增量替换预览，不分窗（默认 "nosplit"）
+
+-- ===== 补全 =====
+opt.completeopt = "menu,menuone,noselect" -- menuone 单个匹配也显示、noselect 不自动选中（默认 "menu,popup"）
+
+-- ===== 分窗与跳转 =====
+opt.splitbelow = true -- :split 开在当前窗口下方（默认 false）
+opt.splitright = true -- :vsplit 开在右侧（默认 false）
+opt.splitkeep = "screen" -- 分窗/关窗时保持屏幕内容（默认 "cursor"）
+opt.winminwidth = 5 -- 窗口最小宽度（默认 1）
+opt.jumpoptions = "view" -- 大范围跳转保留视图（默认 "clean"）
+
+-- ===== 折叠 =====
+opt.foldlevel = 99 -- 默认展开所有折叠（默认 0）
+opt.foldmethod = "indent" -- 按缩进折叠（默认 "manual"）
+opt.foldtext = "" -- 折叠行文本置空（默认显示折叠内容）
+
+-- ===== 性能与行为 =====
+opt.timeoutlen = 300 -- 键序列等待时长(ms)，越小 which-key 越快（默认 1000）
+opt.updatetime = 200 -- swap 写入与 CursorHold 间隔(ms)（默认 4000）
+opt.mouse = "a" -- 全模式启用鼠标（默认部分模式）
+opt.clipboard = vim.env.SSH_CONNECTION and "" or "unnamedplus" -- 系统剪贴板；SSH 下关闭走 OSC52（默认 ""）
+opt.confirm = true -- 有未保存修改时退出需确认（默认 false）
+opt.wildmode = "longest:full,full" -- 命令行补全：先最长公共前缀再全量（默认 "full"）
+opt.wrap = false -- 不自动折行（默认 true）
+opt.linebreak = true -- 折行时在单词边界断行（默认 false）
+opt.shortmess:append({ W = true, I = true, c = true, C = true }) -- 精简提示信息
+opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" } -- 会话保存内容
+opt.undofile = true -- 持久化撤销（默认 false）
+opt.undolevels = 10000 -- 撤销层级数（默认 1000）
+opt.spelllang = { "en" } -- 拼写检查语言（默认空）
+
+-- ===== 工具集成（引用 util 模块） =====
+opt.grepprg = "rg --vimgrep" -- 搜索用 ripgrep（默认内建 grep）
+opt.grepformat = "%f:%l:%c:%m" -- rg 输出解析格式
+opt.formatoptions = "jcroqlnt" -- 自动注释/格式化行为
+opt.formatexpr = "v:lua.require('util.format').formatexpr()" -- gq 格式化走 conform
+opt.statuscolumn = [[%!v:lua.require('util.statuscolumn').get()]] -- 状态列（行号/诊断/折叠，走 snacks）
+
+-- markdown 缩进修复（默认会错误缩进）
 vim.g.markdown_recommended_style = 0

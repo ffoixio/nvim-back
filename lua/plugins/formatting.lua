@@ -1,6 +1,9 @@
 local U = require("util.init")
 local format = require("util.format")
 
+-- 保存时自动格式化（配合 util.format）
+vim.g.autoformat = false
+
 local M = {}
 
 ---@param opts conform.setupOpts
