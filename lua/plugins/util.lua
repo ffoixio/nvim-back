@@ -119,4 +119,14 @@ return {
     "mason-org/mason.nvim",
     opts = { ensure_installed = { "bash-language-server" } },
   },
+
+  -- direnv：目录切换/启动时自动加载 .envrc 环境（让 LSP/终端继承）
+  {
+    "NotAShelf/direnv.nvim",
+    lazy = false,
+    opts = {
+      autoload_direnv = true, -- 启动/目录切换时自动加载 .envrc
+      auto_restart_lsp = true, -- 环境加载后重启 LSP（解决 venv 竞态）
+    },
+  },
 }
