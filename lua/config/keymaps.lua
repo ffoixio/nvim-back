@@ -213,5 +213,14 @@ map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 Snacks.keymap.set({ "n", "x" }, "<localleader>r", function() Snacks.debug.run() end, { desc = "Run Lua", ft = "lua" })
 
 -- 配置
-map("n", "<leader>R", "<cmd>luafile $MYVIMRC<cr>", { desc = "重载配置" })
+map("n", "<leader>R", function()
+  -- 清除配置相关模块缓存后重新加载整个配置（含 lazy 插件 spec）
+  for name, _ in pairs(package.loaded) do
+    if name:match("^config%.") or name:match("^plugins%.") or name:match("^util%.") then
+      package.loaded[name] = nil
+    end
+  end
+  dofile(vim.env.MYVIMRC)
+  vim.notify("配置已重载", vim.log.levels.INFO, { title = "Config" })
+end, { desc = "重载配置" })
 map("n", "<leader>en", "<cmd>edit $MYVIMRC<cr>", { desc = "打开配置入口" })
