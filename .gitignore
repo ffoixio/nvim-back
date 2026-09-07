@@ -1,0 +1,13 @@
+# 参考源码（LazyVim/starter 克隆，非配置）
+.research/
+
+# 日志
+*.log
+nvim.log
+
+# 测试临时目录
+.test/
+
+# 交换文件
+*.swp
+*.swo
