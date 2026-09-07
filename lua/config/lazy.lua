@@ -32,6 +32,8 @@ require("lazy").setup({
     -- import every spec file under lua/plugins/ (including plugins/lang/)
     { import = "plugins" },
   },
+  -- 并发拉取数（默认 20）：降到 8，避免同时开太多到 GitHub 的 TLS 连接被随机掐断
+  concurrency = 8,
   defaults = {
     lazy = false, -- custom plugins load during startup
     version = false, -- always use the latest git commit
