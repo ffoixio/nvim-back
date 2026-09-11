@@ -29,7 +29,10 @@ return {
     ---@class lazyvim.TSConfig: TSConfig
     opts = {
       -- LazyVim config for treesitter
-      indent = { enable = true }, ---@type lazyvim.TSFeat
+      -- 关闭 treesitter 缩进：它会用 indentexpr 覆盖语言内置缩进
+      -- （例如 C 的 cindent 被顶掉，导致 { 后回车/== 不缩进）。
+      -- 改用 Vim 成熟的内置缩进（cindent/GetLuaIndent/GetPythonIndent…），行为更稳定。
+      indent = { enable = false }, ---@type lazyvim.TSFeat
       highlight = { enable = true }, ---@type lazyvim.TSFeat
       folds = { enable = true }, ---@type lazyvim.TSFeat
       ensure_installed = {
