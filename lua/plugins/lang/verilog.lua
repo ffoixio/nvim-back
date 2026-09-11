@@ -1,8 +1,13 @@
 return {
   -- 语法高亮
+  -- 注意：nvim-treesitter main 分支只有 `systemverilog` parser（没有 `verilog`），
+  -- 该 grammar 同时支持 Verilog/SystemVerilog，所以把 verilog 文件类型也注册到它。
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = { ensure_installed = { "verilog", "systemverilog" } },
+    init = function()
+      vim.treesitter.language.register("systemverilog", "verilog")
+    end,
+    opts = { ensure_installed = { "systemverilog" } },
   },
 
   -- LSP：verible（verible-verilog-ls，含诊断/补全/跳转）
