@@ -3,8 +3,8 @@ local lualine_util = require("util.lualine")
 
 -- snacks 动画开关
 vim.g.snacks_animate = true
--- lualine 显示 Trouble 符号位置
-vim.g.trouble_lualine = true
+-- lualine 显示代码位置：用 navic（面包屑）而不是 Trouble symbols，避免两者重复
+vim.g.trouble_lualine = false
 
 -- animations
 
@@ -192,6 +192,9 @@ return {
           end,
         })
       end
+
+      -- navic：在状态栏显示当前代码层级（函数/类面包屑）
+      table.insert(opts.sections.lualine_c, { "navic", color_correction = "dynamic" })
 
       return opts
     end,
@@ -418,5 +421,47 @@ return {
         cursor = { enable = false },
       },
     },
+  },
+
+  -- 顶部粘住当前函数/类的签名（读长函数时始终知道自己在哪）
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "LazyFile",
+    opts = function()
+      local tsc = require("treesitter-context")
+      Snacks.toggle({
+        name = "Treesitter Context",
+        get = tsc.enabled,
+        set = function(state)
+          if state then
+            tsc.enable()
+          else
+            tsc.disable()
+          end
+        end,
+      }):map("<leader>ut")
+      return { mode = "cursor", max_lines = 3 }
+    end,
+  },
+
+  -- nvim-navic：把当前代码层级（函数/类面包屑）提供给 lualine 显示
+  {
+    "SmiteshP/nvim-navic",
+    lazy = true,
+    init = function()
+      vim.g.navic_silence = true
+    end,
+    opts = function()
+      Snacks.util.lsp.on({ method = "textDocument/documentSymbol" }, function(buffer, client)
+        require("nvim-navic").attach(client, buffer)
+      end)
+      return {
+        separator = " ",
+        highlight = true,
+        depth_limit = 5,
+        icons = require("config.icons").icons.kinds,
+        lazy_update_context = true,
+      }
+    end,
   },
 }

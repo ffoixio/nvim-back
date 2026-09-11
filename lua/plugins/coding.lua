@@ -75,6 +75,35 @@ return {
     end,
   },
 
+  -- 快速给文本加/改/删包围符号（括号、引号、标签等）。
+  -- 注意：`s` 已被 flash 占用，所以用 `gs` 前缀，
+  -- 正好接上 which-key 里已有的 { "gs", group = "surround" }。
+  {
+    "nvim-mini/mini.surround",
+    event = "VeryLazy",
+    opts = {
+      mappings = {
+        add = "gsa", -- 添加包围（普通/可视模式）
+        delete = "gsd", -- 删除包围
+        find = "gsf", -- 查找右侧包围
+        find_left = "gsF", -- 查找左侧包围
+        highlight = "gsh", -- 高亮包围
+        replace = "gsr", -- 替换包围
+        update_n_lines = "gsn", -- 更新 n_lines
+      },
+    },
+    -- 只为 which-key 注册描述，键位本身由上面的 mappings 设置
+    keys = {
+      { "gsa", desc = "Add Surrounding", mode = { "n", "x" } },
+      { "gsd", desc = "Delete Surrounding" },
+      { "gsf", desc = "Find Right Surrounding" },
+      { "gsF", desc = "Find Left Surrounding" },
+      { "gsh", desc = "Highlight Surrounding" },
+      { "gsr", desc = "Replace Surrounding" },
+      { "gsn", desc = "Update n_lines" },
+    },
+  },
+
   -- Configures LuaLS to support auto-completion and type checking
   -- while editing your Neovim configuration.
   {

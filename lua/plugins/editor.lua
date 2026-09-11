@@ -282,6 +282,107 @@ return {
     },
   },
 
+  -- illuminate：光标停在一个词上时，自动高亮文件里所有相同出现处
+  -- （走 LSP / Treesitter / regexp 匹配），并支持 ]] / [[ 在引用间跳转。
+  {
+    -- 和 snacks 的 words 模块功能冲突（都高亮光标词），关掉 snacks words
+    "snacks.nvim",
+    opts = { words = { enabled = false } },
+  },
+  {
+    "RRethy/vim-illuminate",
+    event = "LazyFile",
+    opts = {
+      delay = 200,
+      large_file_cutoff = 2000,
+      large_file_overrides = {
+        providers = { "lsp" },
+      },
+    },
+    config = function(_, opts)
+      require("illuminate").configure(opts)
+
+      -- 切换开关 <leader>ux
+      Snacks.toggle({
+        name = "Illuminate",
+        get = function()
+          return not require("illuminate.engine").is_paused()
+        end,
+        set = function(enabled)
+          local m = require("illuminate")
+          if enabled then
+            m.resume()
+          else
+            m.pause()
+          end
+        end,
+      }):map("<leader>ux")
+
+      -- ]] / [[ 在引用之间跳转
+      local function map(key, dir, buffer)
+        vim.keymap.set("n", key, function()
+          require("illuminate")["goto_" .. dir .. "_reference"](false)
+        end, { desc = dir:sub(1, 1):upper() .. dir:sub(2) .. " Reference", buffer = buffer })
+      end
+      map("]]", "next")
+      map("[[", "prev")
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function()
+          local buffer = vim.api.nvim_get_current_buf()
+          map("]]", "next", buffer)
+          map("[[", "prev", buffer)
+        end,
+      })
+    end,
+    keys = {
+      { "]]", desc = "Next Reference" },
+      { "[[", desc = "Prev Reference" },
+    },
+  },
+
+  -- harpoon2：给几个常编辑的文件打标记、一键来回跳（独立于 session/buffer 切换）
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    opts = {
+      menu = {
+        width = vim.api.nvim_win_get_width(0) - 4,
+      },
+      settings = {
+        save_on_toggle = true,
+      },
+    },
+    keys = function()
+      local keys = {
+        {
+          "<leader>H",
+          function()
+            require("harpoon"):list():add()
+          end,
+          desc = "Harpoon File",
+        },
+        {
+          "<leader>h",
+          function()
+            local harpoon = require("harpoon")
+            harpoon.ui:toggle_quick_menu(harpoon:list())
+          end,
+          desc = "Harpoon Quick Menu",
+        },
+      }
+      for i = 1, 9 do
+        table.insert(keys, {
+          "<leader>" .. i,
+          function()
+            require("harpoon"):list():select(i)
+          end,
+          desc = "Harpoon to File " .. i,
+        })
+      end
+      return keys
+    end,
+  },
+
 "monaqa/dial.nvim",
   -- stylua: ignore
   keys = {
