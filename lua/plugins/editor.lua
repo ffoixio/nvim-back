@@ -75,6 +75,8 @@ return {
     opts_extend = { "spec" },
     opts = {
       preset = "helix",
+      -- 弹出延迟(ms)：默认 200（ctx.plugin and 0 or 200），改小更快弹出
+      delay = 100,
       defaults = {},
       spec = {
         {
