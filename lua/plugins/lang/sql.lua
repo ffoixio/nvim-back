@@ -62,6 +62,19 @@ return {
       vim.g.db_ui_use_nerd_fonts = true
       vim.g.db_ui_use_nvim_notify = true
 
+      -- 侧栏窗口给一个固定底色。透明模式下它的 Normal 没有底色，那一块就直接透出终端底色
+      -- （截图里是纯黑），开/关侧栏时整屏重绘会明显"闪一下"；catppuccin 的 NormalSB 就是给
+      -- 侧栏准备的组（crust 底），用它把侧栏变回一块正常的侧栏面板。不想要就删掉这段 autocmd。
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "dbui",
+        callback = function()
+          -- 换配色若没有 NormalSB（比如 tokyonight）就保持透明，别把侧栏搞成没字色的空组
+          if vim.fn.hlexists("NormalSB") == 1 then
+            vim.wo.winhighlight = "Normal:NormalSB,NormalNC:NormalSB"
+          end
+        end,
+      })
+
       -- NOTE: The default behavior of auto-execution of queries on save is disabled
       -- this is useful when you have a big query that you don't want to run every time
       -- you save the file running those queries can crash neovim to run use the
