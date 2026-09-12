@@ -17,7 +17,8 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    enabled = T.enabled("catppuccin"),
+    -- 兜底主题：theme.load() 出错时会回退到 catppuccin/frappe，所以它永远 enabled（不激活时 lazy 才不加载）
+    enabled = true,
     lazy = not T.is("catppuccin"),
     priority = 1000,
     opts = opts("catppuccin", {

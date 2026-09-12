@@ -67,9 +67,9 @@ require("lazy").setup({
   },
 })
 
--- 加载当前主题（切主题改 lua/config/theme.lua 的 active 一行）
-local theme = require("config.theme")
-vim.cmd.colorscheme(theme.scheme(theme.active))
+-- 加载当前主题（切主题改 lua/config/theme.lua 的 active 一行）。
+-- theme.load() 内部会校验配置并 pcall，任何问题都回退到 catppuccin/frappe。
+require("config.theme").load()
 
 -- keymaps and format/root setup run after startup (VeryLazy).
 vim.api.nvim_create_autocmd("User", {
