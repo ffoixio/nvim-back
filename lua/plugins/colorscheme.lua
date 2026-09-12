@@ -5,7 +5,7 @@ return {
     "folke/tokyonight.nvim",
     lazy = vim.g.colorscheme ~= "tokyonight",
     priority = 1000,
-    opts = { style = "storm" },
+    opts = { style = "storm", transparent = true }, -- 同上：切到 tokyonight 也保持透明
   },
 
   -- catppuccin
@@ -15,6 +15,9 @@ return {
     priority = 1000,
     name = "catppuccin",
     opts = {
+      -- 不画编辑器背景（bg = NONE），把画布交给终端 —— 这样终端的 opacity / acrylic 才看得见。
+      -- 注意：winblend/pumblend 是另一层（浮窗与弹出菜单和「编辑器内容」混色），不能替代它。
+      transparent_background = true,
       lsp_styles = {
         underlines = {
           errors = { "undercurl" },
