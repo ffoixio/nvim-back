@@ -1,9 +1,8 @@
 -- todo-comments 的外观定制集中在这里，免得 plugins/editor.lua 里的 spec 越堆越长：
---   1. 配色   —— 插件默认是"语义色实底 + 反色字"，太扎眼；改成灰面底（surface1）+ 语义色字
---   2. picker —— 插件把关键词画成 6 格宽的灰条；改成只染字（列宽对齐不动）
---   3. 圆角   —— 终端画不出圆角，但可以用 Nerd Font 的 powerline 圆角字符在胶囊两端各盖半个圆
+--   1. 配色 —— 插件默认是"语义色实底 + 反色字"，太扎眼；改成灰面底（surface1）+ 语义色字
+--   2. 圆角 —— 终端画不出圆角，但可以用 Nerd Font 的 powerline 圆角字符在胶囊两端各盖半个圆
 --
--- 三件事都挂在插件自己的函数上，所以插件什么时候加载、什么时候重画，我们都跟着走，
+-- 两件事都挂在插件自己的函数上，所以插件什么时候加载、什么时候重画，我们都跟着走，
 -- 不需要自己写 autocmd / 定时器。
 
 local M = {}
@@ -39,31 +38,7 @@ local function patch_colors()
   end
 end
 
---- 2) picker：插件用 { 居中(kw, 6), "TodoBg"..kw } 画关键词，这里把那段高亮组换成 TodoFg<KW>。
---- 必须在 _setup 之后再包：插件是在 _setup 末尾才把 source 挂到 Snacks.picker.sources 上的。
-local function patch_setup()
-  local C = require("todo-comments.config")
-  local orig = C._setup
-  C._setup = function(...)
-    orig(...)
-    local src = Snacks and Snacks.picker and Snacks.picker.sources and Snacks.picker.sources.todo_comments
-    if src and src.format and not src._pill_patched then
-      src._pill_patched = true
-      local format = src.format
-      src.format = function(item, picker)
-        local chunks = format(item, picker)
-        for _, chunk in ipairs(chunks or {}) do
-          if type(chunk[2]) == "string" then
-            chunk[2] = chunk[2]:gsub("^TodoBg", "TodoFg")
-          end
-        end
-        return chunks
-      end
-    end
-  end
-end
-
---- 3) 圆角：插件每画完一批胶囊都会走 Highlight.highlight()，我们从同一个命名空间里读出每条的
+--- 2) 圆角：插件每画完一批胶囊都会走 Highlight.highlight()，我们从同一个命名空间里读出每条的
 --- 范围，把两端那一格留白腾出来画圆角字符，胶囊本体缩成"关键词 + 冒号"。
 --- 两端不是空白（比如 TODO: 正好顶到行尾）就跳过，保持原样，绝不动正文。
 local function round_caps(buf, first, last)
@@ -102,11 +77,10 @@ local function patch_highlight()
   end
 end
 
---- 装好上面三件事，然后 setup 插件；opts 就是 spec 里的那份配置。
+--- 装好上面两件事，然后 setup 插件；opts 就是 spec 里的那份配置。
 ---@param opts table
 function M.setup(opts)
   patch_colors()
-  patch_setup()
   patch_highlight()
   require("todo-comments").setup(opts)
 end
