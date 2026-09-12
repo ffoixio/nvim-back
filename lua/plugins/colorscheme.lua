@@ -103,6 +103,18 @@ return {
         -- 透明背景下几乎看不出来（实测真机上确实在画，只是太暗；这个值跟透明开关无关）。
         -- 提到 surface1，和 picker 里选中行（Visual）同亮度；想更淡就换 surface0。
         hl.CursorLine = { bg = colors.surface1 }
+        -- 同名单词高亮（illuminate / LSP）：透明模式下底色被去掉（见 util/transparency.lua），
+        -- 这里常驻一条下划线，保证还能看出哪些地方出现了同一个词。
+        for _, g in ipairs({
+          "IlluminatedWordText",
+          "IlluminatedWordRead",
+          "IlluminatedWordWrite",
+          "illuminatedWord",
+          "illuminatedCurWord",
+        }) do
+          hl[g] = hl[g] or {}
+          hl[g].underline = true
+        end
         -- 上下文浮层底部那条细下划线：与透明无关，一直保留
         hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl

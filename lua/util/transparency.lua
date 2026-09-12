@@ -52,6 +52,20 @@ M.follow = {
   { "LazyButton", "bg", "NONE", "surface0" },
   { "LazyButtonActive", "bg", "NONE", "surface1" },
   { "TroubleNormal", "bg", "NONE", "crust" },
+  -- NOTE: 浮窗投影。catppuccin 默认是一条带 blend 的深色带（FloatShadow / FloatShadowThrough），
+  -- 透明模式下别处都透了、它却留一条黑边，是最没道理的一块实底；跟着开关走。
+  { "FloatShadow", "bg", "NONE", "crust" },
+  { "FloatShadowThrough", "bg", "NONE", "crust" },
+  -- NOTE: illuminate / LSP 的"同名单词"高亮，默认是给整个词铺底（一小块实色）。
+  -- 透明模式下取消底色、改用下划线（下划线在 plugins/colorscheme.lua 里常驻加上）。
+  { "IlluminatedWordText", "bg", "NONE", "surface1" },
+  { "IlluminatedWordRead", "bg", "NONE", "surface1" },
+  { "IlluminatedWordWrite", "bg", "NONE", "surface2" },
+  { "illuminatedWord", "bg", "NONE", "surface1" },
+  { "illuminatedCurWord", "bg", "NONE", "surface1" },
+  { "LspReferenceText", "bg", "NONE", "surface1" },
+  { "LspReferenceRead", "bg", "NONE", "surface1" },
+  { "LspReferenceWrite", "bg", "NONE", "surface2" },
 }
 
 -- 透明模式下仍强制实底的例外：{组名, 字段, 值}
