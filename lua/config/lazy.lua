@@ -49,7 +49,7 @@ require("lazy").setup({
         "gzip",
         "tarPlugin",
         "tohtml",
-        "tutor",
+        -- "tutor", -- 不禁用：保留内置教程命令 :Tutor / :Tutor zh
         "zipPlugin",
       },
     },
