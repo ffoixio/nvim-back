@@ -20,18 +20,25 @@ M.follow = {
   { "TreesitterContext", "bg", "NONE", "base" },
   { "TreesitterContextLineNumber", "bg", "NONE", "base" },
   -- NOTE: which-key 浮层。它窗口的 Normal 被 winhighlight 指向 WhichKeyNormal（默认 link NormalFloat），
-  -- 所以改 WhichKey 没用；WhichKey 是按键文字那组，也要一起去底，否则文字底下留色块。
+  -- 所以单独改 WhichKey 没用，两个都要处理。
+  -- 注意 fg 必须一起写死：插件是用 nvim_set_hl(..., { link = "NormalFloat", default = true }) 建这些组的，
+  -- 而 default = true 会把"只设了 bg=NONE"的组当成未定义直接盖掉（实测），浮层就又变回实底；
+  -- 只要组里带上 fg，default = true 就再也盖不动了。
   { "WhichKeyNormal", "bg", "NONE", "mantle" },
+  { "WhichKeyNormal", "fg", "text", "text" },
   { "WhichKey", "bg", "NONE", "mantle" },
+  { "WhichKey", "fg", "text", "text" },
   -- NOTE: 浮层边框 + 标题/页脚。scratch 风格会把整个 winhighlight 换成 "NormalFloat:Normal"，
   -- 于是 FloatTitle / FloatFooter 不再被映射到 Snacks*，直接用了全局组（主题里带 mantle 底），
   -- 就是标题和页脚那两小块色块。边框底色留空则会跟随所属浮窗自身的背景。
   { "FloatBorder", "bg", "NONE", "mantle" },
   { "FloatTitle", "bg", "NONE", "mantle" },
   { "FloatFooter", "bg", "NONE", "mantle" },
+  { "FloatFooter", "fg", "subtext0", "subtext0" },   -- 同上：带上 fg 才不会被 default = true 盖掉
   -- NOTE: snacks 浮窗在"非当前窗口"时用的组（默认 link NormalFloat）。不放开的话，
   -- 失焦的 scratch / terminal 会突然变回实底。
   { "SnacksNormalNC", "bg", "NONE", "mantle" },
+  { "SnacksNormalNC", "fg", "text", "text" },         -- 同上（它默认 link NormalFloat）
 }
 
 -- 始终不透明的面板：{组名, 字段, 值}
