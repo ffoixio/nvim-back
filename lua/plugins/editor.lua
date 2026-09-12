@@ -87,7 +87,7 @@ return {
           { "<leader>f", group = "file/find" },
           { "<leader>g", group = "git" },
           { "<leader>gh", group = "hunks" },
-          { "<leader>d", group = "direnv" },
+          { "<leader>d", group = "direnv / profiler" },
           { "<leader>m", group = "metals" },
           { "<leader>h", group = "harpoon" },
           { "<leader>q", group = "quit/session" },
