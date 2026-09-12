@@ -413,6 +413,9 @@ return {
         scroll = {
           timing = animate.gen_timing.linear({ duration = 150, unit = "total" }),
           subscroll = animate.gen_subscroll.equal({
+            -- 默认最多 60 步，也就是 150ms 内最多 60 次重绘；半屏/全屏滚动时终端跟不上就掉帧。
+            -- 压到 20 步（每次重绘约 7.5ms 余量）：动画仍然在，但不再一卡一卡。
+            max_output_steps = 20,
             predicate = function(total_scroll)
               if mouse_scrolled then
                 mouse_scrolled = false
