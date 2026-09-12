@@ -332,7 +332,6 @@ return {
             { key = "n", desc = "New File", action = ":ene | startinsert" },
             { key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
             { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { key = "s", desc = "Restore Session", section = "session" },
             { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
             { key = "q", desc = "Quit", action = ":qa", hidden = true },
           },

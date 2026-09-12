@@ -46,20 +46,21 @@ return {
     },
   },
 
-  -- Session management. This saves your session in the background,
-  -- keeping track of open buffers, window arrangement, and more.
-  -- You can restore sessions when returning through the dashboard.
+  -- 会话：手动保存 + 选择性打开。
+  -- 关掉了两个默认行为：退出时自动保存、下次进同一目录直接恢复上一个。
   {
     "folke/persistence.nvim",
     event = "BufReadPre",
     opts = {},
     -- stylua: ignore
     keys = {
-      { "<leader>qs", function() require("persistence").load() end, desc = "Restore Session" },
-      { "<leader>qS", function() require("persistence").select() end,desc = "Select Session" },
-      { "<leader>ql", function() require("persistence").load({ last = true }) end, desc = "Restore Last Session" },
-      { "<leader>qd", function() require("persistence").stop() end, desc = "Don't Save Current Session" },
+      { "<leader>qs", function() require("persistence").save() end, desc = "Save Session（手动保存）" },
+      { "<leader>qS", function() require("persistence").select() end, desc = "Open Session（选择要打开的）" },
     },
+    config = function(_, opts)
+      require("persistence").setup(opts)
+      require("persistence").stop() -- 撤销 VimLeavePre 自动保存
+    end,
   },
 
   -- library used by other plugins
