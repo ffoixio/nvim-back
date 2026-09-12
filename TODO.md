@@ -112,3 +112,10 @@ vim.o.statusline = " %{v:lua.Status.mode()} | %{v:lua.Status.branch()} | %{v:lua
 - 分组 `%( %)` 可以整体设宽度和截断，适合左边那串路径。
 - lualine 的 `navic` 组件其实是 **nvim-navic 自己提供的**（`nvim-navic/lua/lualine/components/navic.lua`）；去掉 lualine 后直接调 nvim-navic。
 - lualine 还有 `disabled_filetypes`（dashboard / alpha 等不显示状态栏），原生方案要用 `FileType` autocmd 处理。
+
+## 2. 全量审计留下的待办（2026-09-13，详见 `AUDIT.md`）
+
+- **mason 孤儿包 `golangci-lint`**：配置里没有 Go 语言支持，应是旧配置遗留。清理：`rm -rf ~/.local/share/nvim/mason/packages/golangci-lint`（留着也无害）。
+- **parser 孤儿 `go` / `gomod` / `gosum` / `gowork` / `haskell`**：旧配置遗留，无害。清理：删 `~/.local/share/nvim/site/parser/<name>.so` 与 `parser-info/<name>.revision`。
+  注：**`dtd` 不是孤儿**——它是声明里 `xml` 的 `requires`（`parsers.lua:2284`），别删。
+- **启动耗时剖析**：`nvim --startuptime` 看看有没有异常项（本次没做，与报错目标无关）。
