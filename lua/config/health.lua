@@ -42,6 +42,9 @@ local langs = {
   { name = "docker",    lsp = { "docker-langserver" },   ts = { "dockerfile" }, lint = { "hadolint" } },
 }
 
+-- 供 :checkhealth config 与审计脚本复用
+M.langs = langs
+
 function M.check()
   local h = vim.health
 
@@ -107,6 +110,27 @@ function M.check()
     h.ok("所有 <leader> 映射都有 desc（能在 which-key 里显示）")
   else
     h.warn("缺少 desc 的映射：" .. table.concat(nodesc, " "))
+  end
+
+  h.start("config: 插件规格结构")
+  -- 静态扫描（不执行文件）：lua/plugins/**/*.lua 里若出现「第 0 列的仓库名字符串」，
+  -- 说明该规格很可能没被 { } 包住 —— 后果是这个插件的 opts/keys/event/config
+  -- 全部静默失效（不报错！）。本项目已在 yanky / dial / smear-cursor 上踩过 3 次。
+  local proot = vim.fn.stdpath("config") .. "/lua/plugins"
+  local suspects = {}
+  for _, f in ipairs(vim.fn.globpath(proot, "**/*.lua", false, true)) do
+    local n = 0
+    for _, line in ipairs(vim.fn.readfile(f)) do
+      n = n + 1
+      if line:match('^"[^"]+",%s*$') then
+        suspects[#suspects + 1] = ("%s:%d"):format(f:gsub(vim.fn.stdpath("config") .. "/", ""), n)
+      end
+    end
+  end
+  if #suspects == 0 then
+    h.ok("没有「顶层裸规格」的插件文件")
+  else
+    h.error("疑似规格未包裹（会让 opts/keys/event/config 静默失效）：" .. table.concat(suspects, "  "))
   end
 
   h.start("config: 语言就绪度")
