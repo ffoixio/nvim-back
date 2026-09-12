@@ -329,7 +329,14 @@ return {
             { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
             { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
             { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { icon = " ", key = "s", desc = "Restore Session", section = "session" },
+            { icon = " ", key = "s", desc = "Scratch（临时，不保存）", action = function()
+                -- nofile buffer：没有文件名、不写盘、不置 modified 标记
+                -- → 退出时不提示保存，也不会留下任何东西
+                vim.cmd("enew")
+                vim.bo.buftype = "nofile"
+                vim.bo.swapfile = false
+                vim.cmd("startinsert")
+              end },
             { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
             { icon = " ", key = "q", desc = "Quit", action = ":qa" },
           },
