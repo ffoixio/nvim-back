@@ -135,11 +135,13 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
--- 文件尾部居中：只在「本 buffer 进过插入模式」之后才生效。
+-- 文件尾部居中：只在本 buffer 进过 insert 之后才生效。
 --   * 纯浏览（没进过 insert）-> 保持 Vim 默认，光标直接到底部
 --   * 进过 insert 再 Esc      -> 保留居中（含之后在普通模式里移动）
--- 注：scrolloff 到末尾会失效（Vim 不允许滚过最后一行），而改 topline 会被
--- Vim 钳到 (末行-窗高+1)（实测无效）；只有 zz 内部能滚出尾部空白，故用它。
+-- 关键点：进入尾部区域时先把「本窗口」的 scrolloff 关掉。
+-- 否则 scrolloff=999 会让 Vim 每次移动都把 topline 钳回 (末行-窗高+1)，
+-- 表现成「先掉到底部、再被 zz 拉回」的双跳（反复横跳）。
+-- （改 topline 本身也不行：winrestview 会被钳到同一个上限；只有 zz 能滚出尾部空白。）
 vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI", "CursorMoved" }, {
   group = augroup("center_at_eof"),
   callback = function(args)
@@ -151,7 +153,12 @@ vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI", "CursorMoved" }, {
     end
     local half = math.max(1, math.floor(vim.fn.winheight(0) / 2))
     if vim.fn.line(".") + half > vim.fn.line("$") then
+      if vim.wo.scrolloff ~= 0 then
+        vim.wo.scrolloff = 0 -- 本窗口临时关掉，Vim 不再干预 topline
+      end
       vim.cmd("normal! zz")
+    elseif vim.wo.scrolloff == 0 then
+      vim.cmd("setlocal scrolloff<") -- 离开尾部区域，恢复全局 scrolloff
     end
   end,
 })
