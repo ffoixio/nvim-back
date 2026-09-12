@@ -40,6 +40,10 @@ opt.fillchars = {
   diff = "╱", -- diff 删除填充
   eob = " ", -- 隐藏 buffer 末尾的 ~
 }
+-- 浮动窗口背景混合度（0=不透明，100=全透明）：5 ≈ 背景 95% 不透明。
+-- 影响 picker / hover / 通知 / snacks 浮窗；>0 时个别终端会出现重绘残影。
+-- 旧配置里这里是 winblend = 15（注释着），现在按你的要求打开。
+opt.winblend = 5 -- 浮动窗口轻微透明
 opt.conceallevel = 2 -- 隐藏 markdown 加粗/斜体等标记（默认 0）
 opt.laststatus = 3 -- 全局单条状态栏（默认 2）
 opt.showmode = false -- 不显示 "-- INSERT --"，状态栏已展示（默认 true）
