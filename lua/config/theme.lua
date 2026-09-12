@@ -1,15 +1,20 @@
--- 主题开关：切主题只改这一个文件（和 config/modules.lua 一个思路）。
+-- 主题开关：切主题 / 换变体只改这一个文件（和 config/modules.lua 一个思路）。
 --
 --   active    —— 当前用哪个主题（决定加载哪个主题插件、:colorscheme 用哪个名字）
---   available —— 同时"装上并可选"的主题（<leader>uC / :colorscheme 里能看到、能临时预览）
---   variant   —— 每个主题的变体；各主题字段名不同，映射见 var_field
+--   available —— 哪些主题"装上并可选"；不在这里的主题，lazy 既不会安装也不会加载
+--   variant   —— 每个主题用哪个变体。下面把每个主题的**全部取值**都列了出来，
+--                除了当前在用的那行，其余都注释着。
 --
--- 切主题：只改 active 一行 —— variant 里每个主题的值都一直留着，不用注释/反注释。
--- 加主题：available 里加名字 + variant 里写它的值 + plugins/colorscheme.lua 里补一个 spec 块。
+-- 换变体两种写法等价，随便挑：
+--   ① 直接改当前生效那行的字符串（只改一处，推荐）；
+--   ② 把目标那行取消注释、把当前那行注释掉。
 --
--- 注意：换到非 catppuccin 主题时，透明那块还要确认两件事（见 TRANSPARENCY.md 的"换主题"一节）：
---   ① 该主题的透明选项名（下面 extra 里各写了一个，第一次用要确认是否生效）；
---   ② util/transparency.lua 的 palette() 目前只认 catppuccin，关闭透明时会用错颜色。
+-- 每个主题"变体"字段名不同，映射见 var_field；nightfox 例外 —— 它的变体本身就是 colorscheme 名，
+-- 由 scheme() 处理。
+--
+-- 换到非 catppuccin 主题时还要确认两件事（详见 TRANSPARENCY.md 的"换主题"）：
+--   ① 该主题的透明选项名 —— plugins/colorscheme.lua 里每个主题块的 extra 都写了，首次用要确认是否生效；
+--   ② util/transparency.lua 的 palette() 目前只认 catppuccin，关掉透明时面板底色会用错颜色。
 
 local M = {}
 
@@ -17,25 +22,59 @@ M.active = "catppuccin"
 
 M.available = {
   "catppuccin",
-  "tokyonight",
+  -- 想用哪个就取消注释（tokyonight 之前已经装过，其余几个会在下次启动时自动装）
+  -- "tokyonight",
+  -- "rose-pine",
+  -- "nightfox",
+  -- "gruvbox",
+  -- "everforest",
 }
 
 --- 各主题"变体"在 opts 里的字段名（nightfox 没有：它的变体是独立的 colorscheme 名）
 M.var_field = {
-  catppuccin = "flavour", -- latte / frappe / macchiato / mocha
-  tokyonight = "style", -- night / storm / day / moon
-  ["rose-pine"] = "variant", -- main / moon / dawn
-  gruvbox = "contrast", -- hard / soft / ""（深浅看 vim.o.background）
-  everforest = "background", -- hard / medium / soft
+  catppuccin = "flavour",
+  tokyonight = "style",
+  ["rose-pine"] = "variant",
+  gruvbox = "contrast",
+  everforest = "background",
 }
 
 M.variant = {
+  -- ── catppuccin（当前使用）────────────────────────────
   catppuccin = "frappe",
-  tokyonight = "storm",
-  ["rose-pine"] = "main",
-  gruvbox = "hard",
-  everforest = "medium",
-  nightfox = "duskfox", -- nightfox / dayfox / dawnfox / duskfox / nordfox / terafox / carbonfox
+  -- catppuccin = "latte"        -- 浅色
+  -- catppuccin = "macchiato"
+  -- catppuccin = "mocha"
+
+  -- ── tokyonight（需先在 available 里取消注释）──────────
+  -- tokyonight = "storm"
+  -- tokyonight = "night"
+  -- tokyonight = "moon"
+  -- tokyonight = "day"          -- 浅色
+
+  -- ── rose-pine ────────────────────────────────────────
+  -- ["rose-pine"] = "main"
+  -- ["rose-pine"] = "moon"
+  -- ["rose-pine"] = "dawn"      -- 浅色
+
+  -- ── gruvbox（深浅由 vim.o.background 决定）────────────
+  -- gruvbox = "hard"
+  -- gruvbox = "soft"
+  -- gruvbox = ""                -- 默认对比度
+
+  -- ── everforest（深浅由 vim.o.background 决定）─────────
+  -- everforest = "hard"
+  -- everforest = "medium"
+  -- everforest = "soft"
+
+  -- ── nightfox（变体是独立主题名，由 scheme() 取用）─────
+  -- nightfox = "duskfox"        -- 深色（偏紫）
+  -- nightfox = "nightfox"       -- 深色（默认）
+  -- nightfox = "nordfox"
+  -- nightfox = "terafox"
+  -- nightfox = "carbonfox"
+  -- nightfox = "dayfox"         -- 浅色
+  -- nightfox = "dawnfox"        -- 浅色
 }
 
 --- 当前生效的是不是这个主题
