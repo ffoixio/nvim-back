@@ -23,9 +23,15 @@ M.follow = {
   -- 所以改 WhichKey 没用；WhichKey 是按键文字那组，也要一起去底，否则文字底下留色块。
   { "WhichKeyNormal", "bg", "NONE", "mantle" },
   { "WhichKey", "bg", "NONE", "mantle" },
-  -- NOTE: 浮层边框。底色留空会跟随所属浮窗自身的背景 —— picker（实底）边框跟着实底，
-  -- scratch / terminal（内容透明）边框也跟着透明，于是不再有"边框周围一圈色块"。
+  -- NOTE: 浮层边框 + 标题/页脚。scratch 风格会把整个 winhighlight 换成 "NormalFloat:Normal"，
+  -- 于是 FloatTitle / FloatFooter 不再被映射到 Snacks*，直接用了全局组（主题里带 mantle 底），
+  -- 就是标题和页脚那两小块色块。边框底色留空则会跟随所属浮窗自身的背景。
   { "FloatBorder", "bg", "NONE", "mantle" },
+  { "FloatTitle", "bg", "NONE", "mantle" },
+  { "FloatFooter", "bg", "NONE", "mantle" },
+  -- NOTE: snacks 浮窗在"非当前窗口"时用的组（默认 link NormalFloat）。不放开的话，
+  -- 失焦的 scratch / terminal 会突然变回实底。
+  { "SnacksNormalNC", "bg", "NONE", "mantle" },
 }
 
 -- 始终不透明的面板：{组名, 字段, 值}
