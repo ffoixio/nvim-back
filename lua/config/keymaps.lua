@@ -95,6 +95,20 @@ map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Commen
 map("n", "q", "<Nop>", { desc = "禁用宏录制（防误触）" })
 map("n", "Q", "q", { desc = "录制宏" })
 
+-- 打开内置 Vim 教程（中文）：临时切到 zh_CN locale，开完还原
+-- （:Tutor 的参数是「教程名」不是语言，语言由 locale 决定；
+--  想看第二章：:Tutor vim-02-beginner，语言同样跟随 locale）
+map("n", "<leader>T", function()
+  local saved = vim.v.lang
+  if not pcall(function() vim.cmd("language zh_CN.UTF-8") end) then
+    vim.notify("系统缺少 zh_CN locale，将打开英文教程", vim.log.levels.WARN)
+  end
+  vim.cmd("Tutor")
+  if saved ~= "" then
+    vim.cmd("language " .. saved)
+  end
+end, { desc = "Vim 教程（中文）" })
+
 -- lazy
 map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
