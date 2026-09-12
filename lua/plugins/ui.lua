@@ -332,16 +332,9 @@ return {
             { key = "n", desc = "New File", action = ":ene | startinsert" },
             { key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
             { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { key = "s", desc = "Scratch（临时，不保存）", action = function()
-                -- nofile buffer：没有文件名、不写盘、不置 modified 标记
-                -- → 退出时不提示保存，也不会留下任何东西
-                vim.cmd("enew")
-                vim.bo.buftype = "nofile"
-                vim.bo.swapfile = false
-                vim.cmd("startinsert")
-              end },
+            { key = "s", desc = "Restore Session", section = "session" },
             { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
-            { key = "q", desc = "Quit", action = ":qa" },
+            { key = "q", desc = "Quit", action = ":qa", hidden = true },
           },
         },
       },
