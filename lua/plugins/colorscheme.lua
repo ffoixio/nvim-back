@@ -97,6 +97,9 @@ return {
         }) do
           hl[group] = { fg = colors.base, bg = colors[key] }
         end
+        -- picker 选中行常驻的下划线：透明模式下底色被去掉（见 util/transparency.lua），
+        -- 靠这条不铺底的线还能一眼看出选中了哪一行。
+        hl.SnacksPickerListCursorLine = { underline = true, sp = colors.surface2 }
         -- 上下文浮层底部那条细下划线：与透明无关，一直保留
         hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl

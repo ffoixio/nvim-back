@@ -48,6 +48,10 @@ M.follow = {
   -- SnacksPickerInput 是直接 link NormalFloat 的（不经过 SnacksPicker），所以要单独列
   { "SnacksPickerInput", "bg", "NONE", "mantle" },
   { "SnacksPickerInput", "fg", "text", "text" },
+  -- NOTE: picker 的"选中行"。列表窗口的 winhighlight 把 CursorLine 指到 SnacksPickerListCursorLine
+  -- （聚焦时）或全局 CursorLine（失焦时），nvim 本身没有让它透明的选项，只能改这个组。
+  -- 透明模式下把底色去掉（不然整行就是一条实色块），选中感由 colorscheme.lua 里常驻的下划线提供。
+  { "SnacksPickerListCursorLine", "bg", "NONE", "surface1" },
 }
 
 -- 始终不透明的面板：{组名, 字段, 值}
