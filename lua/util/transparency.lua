@@ -39,6 +39,15 @@ M.follow = {
   -- 失焦的 scratch / terminal 会突然变回实底。
   { "SnacksNormalNC", "bg", "NONE", "mantle" },
   { "SnacksNormalNC", "fg", "text", "text" },         -- 同上（它默认 link NormalFloat）
+  -- NOTE: picker（<leader>s… 那批）的窗口。它们 winhighlight 里的 Normal 指向 SnacksPickerList /
+  -- SnacksPickerInput / SnacksPickerBox / SnacksPickerPreview，这几个都 link 到 SnacksPicker，
+  -- 最终落到 NormalFloat（mantle 底）——而浮窗底正是我们在透明模式下特意留实底的。
+  -- picker 要跟 scratch / terminal 一样透过去，所以把这条链的根单独放开，下面几个 link 它的会自动跟着变。
+  { "SnacksPicker", "bg", "NONE", "mantle" },
+  { "SnacksPicker", "fg", "text", "text" },           -- 带上 fg，免得只改 bg 把 fg 丢了
+  -- SnacksPickerInput 是直接 link NormalFloat 的（不经过 SnacksPicker），所以要单独列
+  { "SnacksPickerInput", "bg", "NONE", "mantle" },
+  { "SnacksPickerInput", "fg", "text", "text" },
 }
 
 -- 始终不透明的面板：{组名, 字段, 值}
@@ -52,7 +61,6 @@ M.always_opaque = {
   { "LazyButton", "bg", "surface0" },
   { "LazyButtonActive", "bg", "surface1" },
   { "TroubleNormal", "bg", "crust" },
-  { "SnacksPickerNormal", "bg", "base" },
 }
 
 local STATE = vim.fn.stdpath("state") .. "/transparent_background"
