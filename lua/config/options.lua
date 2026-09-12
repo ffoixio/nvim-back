@@ -27,8 +27,8 @@ opt.cursorline = true -- 高亮当前行（默认 false）
 opt.colorcolumn = "120" -- 第 120 列参考线（默认 "" 关闭）
 opt.signcolumn = "yes" -- 签名列常驻，避免诊断符号出现时文本抖动（默认 "auto"）
 opt.termguicolors = true -- 24 位真彩色（默认 false）
-opt.scrolloff = 4 -- 光标距上下边缘最小行数（默认 0）
-opt.sidescrolloff = 8 -- 光标距左右边缘最小列数（默认 0）
+opt.scrolloff = 999 -- 光标保持在屏幕垂直中央（Vim 自动夹到 (窗高-1)/2；文件开头/结尾处无法居中）
+opt.sidescrolloff = 8 -- 光标距左右边缘最小列数（默认 0；想水平也居中就同样改 999）
 opt.smoothscroll = true -- <C-e>/<C-y> 平滑滚动（默认 false）
 opt.list = true -- 显示不可见字符（默认 false）
 opt.listchars = { tab = "» ", trail = "·" } -- Tab 与行尾空格显示（默认仅 trail "-"）
