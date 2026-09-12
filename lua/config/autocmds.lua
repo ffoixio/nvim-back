@@ -135,12 +135,20 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
--- 文件尾部也让光标居中（scrolloff 到末尾会失效，因为 Vim 不允许滚过最后一行）。
--- 注意：这里**不能**靠改 topline —— winrestview 的 topline 会被 Vim 钳到
--- (末行 - 窗高 + 1)（实测无效）。只有 zz 内部允许滚出尾部空白，所以用它。
-vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter" }, {
+-- 文件尾部居中：只在「本 buffer 进过插入模式」之后才生效。
+--   * 纯浏览（没进过 insert）-> 保持 Vim 默认，光标直接到底部
+--   * 进过 insert 再 Esc      -> 保留居中（含之后在普通模式里移动）
+-- 注：scrolloff 到末尾会失效（Vim 不允许滚过最后一行），而改 topline 会被
+-- Vim 钳到 (末行-窗高+1)（实测无效）；只有 zz 内部能滚出尾部空白，故用它。
+vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI", "CursorMoved" }, {
   group = augroup("center_at_eof"),
-  callback = function()
+  callback = function(args)
+    if args.event == "InsertEnter" then
+      vim.b.center_at_eof = true
+    end
+    if args.event == "CursorMoved" and not vim.b.center_at_eof then
+      return
+    end
     local half = math.max(1, math.floor(vim.fn.winheight(0) / 2))
     if vim.fn.line(".") + half > vim.fn.line("$") then
       vim.cmd("normal! zz")
