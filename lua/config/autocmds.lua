@@ -135,25 +135,15 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
--- 插入时保持光标距底部至少 scrolloff 行（避免光标贴底）
-vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI" }, {
-  group = augroup("insert_bottom_margin"),
+-- 文件尾部也让光标居中（scrolloff 到末尾会失效，因为 Vim 不允许滚过最后一行）。
+-- 注意：这里**不能**靠改 topline —— winrestview 的 topline 会被 Vim 钳到
+-- (末行 - 窗高 + 1)（实测无效）。只有 zz 内部允许滚出尾部空白，所以用它。
+vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter" }, {
+  group = augroup("center_at_eof"),
   callback = function()
-    local soff = vim.o.scrolloff
-    if soff == 0 then
-      return
-    end
-    local cursor = vim.fn.line(".")
-    local lc = vim.fn.line("$")
-    if cursor + soff > lc then
-      local wh = vim.fn.winheight(0)
-      local new_top = cursor - wh + soff + 1
-      new_top = math.max(1, math.min(new_top, lc))
-      if new_top > vim.fn.line("w0") then
-        local view = vim.fn.winsaveview()
-        view.topline = new_top
-        vim.fn.winrestview(view)
-      end
+    local half = math.max(1, math.floor(vim.fn.winheight(0) / 2))
+    if vim.fn.line(".") + half > vim.fn.line("$") then
+      vim.cmd("normal! zz")
     end
   end,
 })
