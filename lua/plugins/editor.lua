@@ -276,10 +276,23 @@ return {
     cmd = { "TodoTrouble", "TodoTelescope" },
     event = "LazyFile",
     opts = {
-      -- 注释关键词画成"胶囊"：wide = 关键词连同左右各一个空格一起上底色（终端做不出圆角，
+      -- 注释关键词画成"胶囊"：wide = 匹配范围左右各扩一个字符上底色（终端做不出圆角，
       -- 留白就是最接近胶囊的效果）。颜色不用手写：插件从配色推导
       -- （keywords[kw].color → Diagnostic* 的 fg，所以 TODO 是 info 色、FIX 是 error 色…）。
-      highlight = { keyword = "wide" },
+      --
+      -- pattern 的双分组是故意的（见 todo-comments/highlight.lua M.match）：
+      --   m[2] 决定胶囊范围（再被 wide 左右各撑一个字符），m[3] 才是用来选颜色的关键词。
+      -- 默认 pattern 只有 (KEYWORDS) 一个分组，于是 m[2]="TODO"，wide 撑出来的右边
+      -- 多带一个冒号 → "-- [ TODO:] 文字"（右边没留白）。把冒号并进外层分组后
+      -- m[2]="TODO:"，wide 再撑一格就吃到了冒号后面的空格 → "-- [ TODO: ] 文字"，左右对称。
+      highlight = {
+        keyword = "wide",
+        pattern = [[.*<((KEYWORDS)\s*:)]],
+        -- 默认 after = "fg" 会把冒号到行尾整条注释都染成关键词色，而且它的 extmark 正好从
+        -- 胶囊右边那一格开始、把胶囊底色盖掉（实测那格变成纯文字色 → 右边没留白）。
+        -- 关掉后：只有胶囊有色，注释正文保持 Comment 灰。
+        after = "",
+      },
       -- 加粗来自 gui_style.bg（默认 "BOLD"），这里去掉，保持"细胶囊"观感。
       gui_style = { fg = "NONE", bg = "NONE" },
     },
