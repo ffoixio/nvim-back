@@ -15,21 +15,21 @@ M.lang = {
   cmake = true,
   docker = true,
   git = true, -- gitcommit / git_config / gitattributes / diff
-  go = true, -- 需系统装 go（pacman -S go）
+  go = false, -- 暂不学 Go，要用时改 true（需 pacman -S go）
   json = true,
   julia = false, -- 系统未装 julia，要用时改 true
   make = true, -- Makefile + Justfile
   nix = true,
-  perl = true,
+  perl = false, -- 暂不写 Perl
   python = true,
-  rust = true,
-  scala = true, -- metals 由 coursier 自取
-  sql = true, -- dadbod + sqlfluff
-  tcl = true, -- Tcl + xdc / nxdc / sdc / upf
+  rust = false, -- 暂不写 Rust（要用时还需 pacman -S rust）
+  scala = false, -- 暂不写 Scala（metals 由 coursier 自取）
+  sql = false, -- SQL 交给 IDEA/Navicat，nvim 侧只保留基础编辑
+  tcl = false, -- 暂时没有 xdc/Tcl 要写
   toml = true,
   verilog = true, -- Verilog / SystemVerilog（verible）
   yaml = true,
-  zig = true, -- 需系统装 zig（pacman -S zig）
+  zig = false, -- 暂不学 Zig，要用时改 true（需 pacman -S zig）
 }
 
 ---@type table<string, boolean>

@@ -85,8 +85,18 @@ function M.enabled()
 end
 
 local function flavour()
-  local f = (vim.g.colors_name or ""):match("^catppuccin%-(.+)$")
-  return f or "frappe"
+  -- ① 先看 :colorscheme 的名字（catppuccin-frappe）——用主题名指定变体时，这才是当前真正生效的那个
+  local from_name = (vim.g.colors_name or ""):match("^catppuccin%-(.+)$")
+  if from_name then
+    return from_name
+  end
+  -- ② 名字里没有变体（说明是在 opts 里写 flavour = "..."），就问主题自己
+  local ok, cat = pcall(require, "catppuccin")
+  if ok and type(cat.flavour) == "string" then
+    return cat.flavour
+  end
+  -- ③ 兜底
+  return "frappe"
 end
 
 local function palette()
