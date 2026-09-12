@@ -4,9 +4,7 @@ return {
   -- 该 grammar 同时支持 Verilog/SystemVerilog，所以把 verilog 文件类型也注册到它。
   {
     "nvim-treesitter/nvim-treesitter",
-    init = function()
-      vim.treesitter.language.register("systemverilog", "verilog")
-    end,
+    -- verilog → systemverilog 的 parser 注册已挪到 config/autocmds.lua（不再依赖插件加载时机）
     opts = { ensure_installed = { "systemverilog" } },
   },
 

@@ -115,7 +115,7 @@ vim.o.statusline = " %{v:lua.Status.mode()} | %{v:lua.Status.branch()} | %{v:lua
 
 ## 2. 全量审计留下的待办（2026-09-13，详见 `AUDIT.md`）
 
-- **mason 孤儿包 `golangci-lint`**：配置里没有 Go 语言支持，应是旧配置遗留。清理：`rm -rf ~/.local/share/nvim/mason/packages/golangci-lint`（留着也无害）。
-- **parser 孤儿 `go` / `gomod` / `gosum` / `gowork` / `haskell`**：旧配置遗留，无害。清理：删 `~/.local/share/nvim/site/parser/<name>.so` 与 `parser-info/<name>.revision`。
+- ~~mason 孤儿包 `golangci-lint`~~ / ~~parser 孤儿 `go`/`gomod`/`gosum`/`gowork`~~：**已解决**——2026-09-13 起 Go 进"以后要用"的清单，`plugins/lang/go.lua` 已接上 gopls + goimports + golangci-lint，那几个 parser 就是它的高亮。
+- **parser 孤儿 `haskell`**：仍然是孤儿（配置里没有 Haskell），无害；要清就删 `~/.local/share/nvim/site/parser/haskell.so` 与 `parser-info/haskell.revision`。
   注：**`dtd` 不是孤儿**——它是声明里 `xml` 的 `requires`（`parsers.lua:2284`），别删。
 - **启动耗时剖析**：`nvim --startuptime` 看看有没有异常项（本次没做，与报错目标无关）。

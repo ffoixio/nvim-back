@@ -7,8 +7,19 @@ vim.filetype.add({
     vh = "systemverilog",
     sv = "systemverilog",
     svh = "systemverilog",
+    -- EDA 约束文件其实都是 Tcl 方言，统一当 xdc（高亮/lint 见 plugins/lang/tcl.lua）：
+    -- xdc = Xilinx 约束，nxdc = NJU XDC（nvboard 用的，只是换了后缀），sdc = Synopsys，upf = 电源意图
+    xdc = "xdc",
+    nxdc = "xdc",
+    sdc = "xdc",
+    upf = "xdc",
   },
 })
+
+-- 文件类型 → treesitter parser 的注册。放这里而不是插件 init 里：nvim-treesitter 是 lazy 加载的，
+-- 写在它的 init 里要等插件真正加载（BufReadPost）才生效，不如启动时就注册稳妥（register 只是记表）。
+vim.treesitter.language.register("systemverilog", "verilog") -- .v 也用 systemverilog 语法
+vim.treesitter.language.register("tcl", "xdc") -- xdc/nxdc/sdc/upf 用 tcl 语法
 
 local function augroup(name)
   return vim.api.nvim_create_augroup("config_" .. name, { clear = true })

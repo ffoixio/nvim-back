@@ -29,7 +29,7 @@ local langs = {
   { name = "lua",       lsp = { "lua-language-server" }, ts = { "lua" },  fmt = { "stylua" } },
   { name = "c / cpp",   lsp = { "clangd" },              ts = { "c", "cpp" } },
   { name = "cmake",     lsp = { "neocmakelsp" },         ts = { "cmake" }, fmt = { "cmake-format" }, lint = { "cmake-lint" } },
-  { name = "bash / sh", lsp = { "bash-language-server" }, ts = { "bash" }, fmt = { "shfmt" },        lint = { "shellcheck" } },
+  { name = "bash / zsh", lsp = { "bash-language-server" }, ts = { "bash", "zsh" }, fmt = { "shfmt" }, lint = { "shellcheck" } },
   { name = "json",      lsp = { "vscode-json-language-server" }, ts = { "json" } },
   { name = "yaml",      lsp = { "yaml-language-server" }, ts = { "yaml" } },
   { name = "toml",      lsp = { "taplo" },               ts = { "toml" },  fmt = { "taplo" } },
@@ -40,6 +40,11 @@ local langs = {
   { name = "verilog",   lsp = { "verible-verilog-ls" },  ts = { "systemverilog" }, fmt = { "verible-verilog-format" }, lint = { "verilator" } },
   { name = "nix",       lsp = { "nil" },                 ts = { "nix" } },
   { name = "docker",    lsp = { "docker-langserver" },   ts = { "dockerfile" }, lint = { "hadolint" } },
+  { name = "go",        lsp = { "gopls" },                ts = { "go", "gomod", "gosum", "gowork" }, fmt = { "goimports" }, lint = { "golangci-lint" } },
+  { name = "zig",       lsp = { "zls" },                  ts = { "zig" } },
+  { name = "tcl / xdc",                                   ts = { "tcl" }, lint = { "tclint" } },
+  { name = "perl",      lsp = { "perlnavigator" },        ts = { "perl" } },
+  { name = "make/just",                                   ts = { "make", "just" }, lint = { "checkmake" } },
 }
 
 -- 供 :checkhealth config 与审计脚本复用
