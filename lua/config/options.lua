@@ -16,7 +16,9 @@ opt.tabstop = 4 -- 文件中 Tab 的显示宽度（默认 8）
 opt.shiftwidth = 4 -- >>/<</自动缩进宽度，与 tabstop 一致（默认 8）
 opt.shiftround = true -- >>/<< 缩进取整到 shiftwidth 倍数（默认 false）
 opt.smartindent = true -- 自动缩进（默认 false）
-opt.whichwrap = "b,s,h,l,<,>,[,]" -- 这些命令可跨行移动光标（默认 "b,s"）
+-- 哪些命令可以跨到上/下一行（nvim 默认 "b,s" = <BS> 和 <Space>）。之前把 h / l / 方向键 / [ ]
+-- 也加进来了，结果一行内左右移到底会跳到上下行；改回默认。想完全禁止跨行就写 ""。
+opt.whichwrap = "b,s"
 opt.virtualedit = "block" -- 可视块模式允许光标进入无字符区域（默认 ""）
 opt.autowrite = true -- 切换 buffer 前自动保存（默认 false）
 

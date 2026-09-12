@@ -97,6 +97,10 @@ return {
         }) do
           hl[group] = { fg = colors.base, bg = colors[key] }
         end
+        -- 光标行：catppuccin 默认是 darken(surface0, 0.64, base) ≈ #3B3F52，只比底色亮一点点，
+        -- 透明背景下几乎看不出来（实测真机上确实在画，只是太暗；这个值跟透明开关无关，不是被关掉了）。
+        -- 提到 surface1，和 picker 里选中行（Visual）同亮度；想更淡就换 surface0。
+        hl.CursorLine = { bg = colors.surface1 }
         -- 上下文浮层底部那条细下划线：与透明无关，一直保留
         hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl
