@@ -49,6 +49,18 @@ return {
         treesitter_context = true,
         which_key = true,
       },
+      -- treesitter-context（顶部粘住当前函数 / if 块的签名）被 catppuccin 集成铺成整块
+      -- mantle 深色底，看着就是一块色块。这里改成与正文同底色，只在最后一行留一条细
+      -- 下划线当分隔；底色用 base，和正文完全同色，浮动窗口也不会变透明。
+      -- custom_highlights 在 catppuccin 里优先级最高（compiler.lua 用 "keep" 合并），
+      -- 所以能盖掉集成。
+      custom_highlights = function(colors)
+        return {
+          TreesitterContext = { fg = colors.text, bg = colors.base },
+          TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } },
+          TreesitterContextLineNumber = { fg = colors.overlay0, bg = colors.base },
+        }
+      end,
     },
     specs = {
       {
