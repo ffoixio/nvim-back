@@ -276,30 +276,23 @@ return {
     cmd = { "TodoTrouble", "TodoTelescope" },
     event = "LazyFile",
     opts = {
-      -- 注释关键词画成"胶囊"：wide = 匹配范围左右各扩一个字符上底色，这两格留白既是留白、
-      -- 也是 util/todo_pill.lua 画圆角两端时用的位置。颜色不用手写：插件从配色推导
-      -- （keywords[kw].color → Diagnostic* 的 fg，所以 TODO 是 info 色、FIX 是 error 色…）。
-      --
-      -- pattern 的双分组是故意的（见 todo-comments/highlight.lua M.match）：
-      --   m[2] 决定胶囊范围（再被 wide 左右各撑一个字符），m[3] 才是用来选颜色的关键词。
-      -- 默认 pattern 只有 (KEYWORDS) 一个分组，于是 m[2]="TODO"，wide 撑出来的右边
-      -- 多带一个冒号 → "-- [ TODO:] 文字"（右边没留白）。把冒号并进外层分组后
-      -- m[2]="TODO:"，wide 再撑一格就吃到了冒号后面的空格 → "-- [ TODO: ] 文字"，左右对称。
+      -- 关键词只染字、不铺底：
+      --   * 底色会挡住终端透明（nvim 的高亮底色一定是不透明的，blend 也只是换个不透明色），
+      --     而本配置整套都在追求"背景透过去"，所以这里不能用色块/胶囊；
+      --   * "fg" = 只给关键词上语义色（插件从配色推导：TODO → info、FIX → error…），
+      --     不再给底色，也不需要自定义 pattern / 留白。
       highlight = {
-        keyword = "wide",
-        pattern = [[.*<((KEYWORDS)\s*:)]],
-        -- 默认 after = "fg" 会把冒号到行尾整条注释都染成关键词色，而且它的 extmark 正好从
-        -- 胶囊右边那一格开始、把胶囊底色盖掉（实测那格变成纯文字色 → 右边没留白）。
-        -- 关掉后：只有胶囊有色，注释正文保持 Comment 灰。
+        keyword = "fg",
         after = "",
+        -- 默认 200ms 节流（highlight.lua:124）连首次高亮也走定时器，于是打开文件后要"渲染一下"
+        -- 才出现关键词颜色；置 0 让它和语法高亮同一帧出来。
+        throttle = 0,
       },
-      -- 加粗来自 gui_style.bg（默认 "BOLD"），这里去掉，保持"细胶囊"观感。
       gui_style = { fg = "NONE", bg = "NONE" },
     },
-    -- 胶囊外观（灰面配色 / picker 里只染字 / 两端圆角）都在 lua/util/todo_pill.lua 里，
-    -- 这里只把配置交给它，spec 保持短。
+    -- picker 列表的观感修正见 lua/util/todo_style.lua（插件把关键词画成 6 格宽的色块条）。
     config = function(_, opts)
-      require("util.todo_pill").setup(opts)
+      require("util.todo_style").setup(opts)
     end,
     -- stylua: ignore
     keys = {
