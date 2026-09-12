@@ -87,6 +87,7 @@ return {
           { "<leader>f", group = "file/find" },
           { "<leader>g", group = "git" },
           { "<leader>gh", group = "hunks" },
+          { "<leader>h", group = "harpoon" },
           { "<leader>q", group = "quit/session" },
           { "<leader>s", group = "search" },
           { "<leader>u", group = "ui" },
@@ -342,7 +343,8 @@ return {
     },
   },
 
-  -- harpoon2：给几个常编辑的文件打标记、一键来回跳（独立于 session/buffer 切换）
+  -- harpoon2：文件书签（收进 <leader>h 子菜单，避免占满顶层）
+  --   <leader>ha 加入书签 / <leader>hm 快速菜单 / <leader>h1~h9 跳到第 N 个
   {
     "ThePrimeagen/harpoon",
     branch = "harpoon2",
@@ -357,28 +359,28 @@ return {
     keys = function()
       local keys = {
         {
-          "<leader>H",
+          "<leader>ha",
           function()
             require("harpoon"):list():add()
           end,
-          desc = "Harpoon File",
+          desc = "Add File",
         },
         {
-          "<leader>h",
+          "<leader>hm",
           function()
             local harpoon = require("harpoon")
             harpoon.ui:toggle_quick_menu(harpoon:list())
           end,
-          desc = "Harpoon Quick Menu",
+          desc = "Quick Menu",
         },
       }
       for i = 1, 9 do
         table.insert(keys, {
-          "<leader>" .. i,
+          "<leader>h" .. i,
           function()
             require("harpoon"):list():select(i)
           end,
-          desc = "Harpoon to File " .. i,
+          desc = "To File " .. i,
         })
       end
       return keys
