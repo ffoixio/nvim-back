@@ -5,21 +5,22 @@
 --   themes    —— 每个主题的全部事实：仓库、lazy 插件名、变体字段、允许取值、当前变体、透明选项片段
 --
 -- 换变体：改 M.themes.<主题>.variant 的字符串即可（取值见下面的"变体取值一览"）。
--- 换主题：改 active 一行（若目标不在 available 里，先把它那行注释去掉）。
+-- 换主题：改 active 一行（六个主题都在 available 里，直接改就行；想"只留一个"，把其余行注释掉）。
 -- 兜底：active/变体写错、主题没装、setup 报错，load() 都会回退到 M.fallback（catppuccin + frappe）。
 
 local M = {}
 
 M.active = "catppuccin"
 
+-- 六个主题全部登记：这里只表示"允许被 active 选中（并会被 lazy 安装、按需加载）"，
+-- 真正用哪个仍然只看上面 active 一行。没登记的主题 lazy 既不安装也不加载。
 M.available = {
   "catppuccin",
-  -- 想用哪个就取消注释（tokyonight 之前已经装过；其余几个会在下次启动时自动安装）
-  -- "tokyonight",
-  -- "rose-pine",
-  -- "nightfox",
-  -- "gruvbox",
-  -- "everforest",
+  "tokyonight",
+  "rose-pine",
+  "nightfox",
+  "gruvbox",
+  "everforest",
 }
 
 -- 兜底主题：load() 一旦发现配置有问题、或加载失败就回退到它（它的 spec 永远 enabled）
@@ -86,6 +87,10 @@ M.themes = {
   everforest = {
     repo = "neanias/everforest-nvim",
     plugin = "everforest-nvim",
+    -- 插件目录叫 everforest-nvim，Lua 模块却叫 everforest。lazy 的隐式 setup(opts) 是
+    -- require(main or 插件名).setup(opts)，不写 main 就找不到模块、opts 整个被丢掉（实测：
+    -- 报 "Lua module not found for config"，透明设置没生效、Normal 还是实底）。
+    main = "everforest",
     var_field = "background",
     valid = { "hard", "medium", "soft" },
     variant = "medium",
