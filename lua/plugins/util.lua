@@ -27,6 +27,11 @@ return {
       quickfile = { enabled = true },
       terminal = {
         win = {
+          -- 以屏幕中央的浮动窗口打开（与 snacks scratch 同风格；原来默认是底部横条）
+          position = "float",
+          width = 0.9,
+          height = 0.9,
+          border = "rounded",
           keys = {
             nav_h = { "<C-h>", term_nav("h"), desc = "Go to Left Window", expr = true, mode = "t" },
             nav_j = { "<C-j>", term_nav("j"), desc = "Go to Lower Window", expr = true, mode = "t" },
@@ -54,8 +59,57 @@ return {
     opts = {},
     -- stylua: ignore
     keys = {
-      { "<leader>qs", function() require("persistence").save() end, desc = "Save Session（手动保存）" },
-      { "<leader>qS", function() require("persistence").select() end, desc = "Open Session（选择要打开的）" },
+      {
+        "<leader>qs",
+        function()
+          local dir = require("persistence.config").options.dir
+          vim.ui.input({ prompt = "保存会话为（留空 = 默认槽位，会覆盖）: " }, function(name)
+            if name == nil then
+              return
+            end
+            if name == "" then
+              require("persistence").save()
+              vim.notify("已保存到默认槽位（按目录，覆盖）", vim.log.levels.INFO)
+              return
+            end
+            vim.fn.mkdir(dir, "p")
+            local file = dir .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t") .. "@" .. name .. ".vim"
+            vim.cmd("mks! " .. vim.fn.fnameescape(file))
+            vim.notify("会话已保存: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
+          end)
+        end,
+        desc = "Save Session（可命名）",
+      },
+      {
+        "<leader>qS",
+        function()
+          local dir = require("persistence.config").options.dir
+          local files = vim.fn.glob(dir .. "*.vim", false, true)
+          if #files == 0 then
+            vim.notify("还没有保存过的会话（先 <leader>qs）", vim.log.levels.WARN)
+            return
+          end
+          table.sort(files, function(a, b)
+            return vim.fn.getftime(a) > vim.fn.getftime(b)
+          end)
+          vim.ui.select(files, {
+            prompt = "打开哪个会话",
+            format_item = function(f)
+              return ("%s   (%s)"):format(
+                vim.fn.fnamemodify(f, ":t:r"),
+                os.date("%m-%d %H:%M", vim.fn.getftime(f))
+              )
+            end,
+          }, function(choice)
+            if not choice then
+              return
+            end
+            vim.cmd("silent! source " .. vim.fn.fnameescape(choice))
+            vim.notify("已打开: " .. vim.fn.fnamemodify(choice, ":t:r"), vim.log.levels.INFO)
+          end)
+        end,
+        desc = "Open Session（选择）",
+      },
     },
     config = function(_, opts)
       require("persistence").setup(opts)
