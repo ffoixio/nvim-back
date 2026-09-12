@@ -145,18 +145,31 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 vim.api.nvim_create_autocmd({ "InsertEnter", "CursorMovedI", "CursorMoved" }, {
   group = augroup("center_at_eof"),
   callback = function(args)
+    -- 只处理普通文件缓冲区。picker 的输入框是 buftype=prompt、结果列表是 nofile，
+    -- 在这些 buffer 里执行 :normal 会打断输入机制。
+    if vim.bo.buftype ~= "" or not vim.bo.modifiable then
+      return
+    end
     if args.event == "InsertEnter" then
       vim.b.center_at_eof = true
     end
     if args.event == "CursorMoved" and not vim.b.center_at_eof then
       return
     end
-    local half = math.max(1, math.floor(vim.fn.winheight(0) / 2))
+    local wh = vim.fn.winheight(0)
+    if vim.fn.line("$") <= wh then
+      return -- 文件比窗口还短，本来就无法居中（也让 1 行的 prompt buffer 直接出局）
+    end
+    local half = math.max(1, math.floor(wh / 2))
     if vim.fn.line(".") + half > vim.fn.line("$") then
       if vim.wo.scrolloff ~= 0 then
         vim.wo.scrolloff = 0 -- 本窗口临时关掉，Vim 不再干预 topline
       end
-      vim.cmd("normal! zz")
+      -- 关键：绝不在插入模式里跑 :normal —— 那会在插入中途切回普通模式、打断输入。
+      -- 插入时只负责关掉 scrolloff，真正的 zz 留到 Esc 后的 CursorMoved。
+      if vim.fn.mode() == "n" then
+        vim.cmd("normal! zz")
+      end
     elseif vim.wo.scrolloff == 0 then
       vim.cmd("setlocal scrolloff<") -- 离开尾部区域，恢复全局 scrolloff
     end
