@@ -316,6 +316,10 @@ return {
         { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
         { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
         { key = "q", desc = "Quit", action = ":qa", hidden = true },
+        -- 全局的 s / S 被 flash 占着（Flash / Flash Treesitter），在启动页按到会跳出去乱闪；
+        -- 用隐藏的空动作把它们吃掉。要再堵别的键，照抄一行改 key 即可。
+        { key = "s", action = function() end, hidden = true },
+        { key = "S", action = function() end, hidden = true },
       }
 
       -- 每行宽度 = 最长描述 + 描述与键位之间的空隙 + 1 个键位列。
