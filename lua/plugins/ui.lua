@@ -76,6 +76,9 @@ return {
   -- Displays a fancy status line with git status,
   -- LSP diagnostics, filetype information, and more.
   {
+  -- TODO: 用 Neovim 原生 statusline 替换 lualine（方向：以后直接用原生 API，不再依赖插件）。
+  --   要迁移的信息项：mode / branch / 项目根目录 / 诊断 / filetype / 路径 / navic 面包屑 /
+  --   lazy 更新数 / diff / 进度 / 行:列 / 时钟。做法、已验证的渲染样例和坑见仓库根目录的待办文档。
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
     init = function()

@@ -5,7 +5,7 @@ return {
     "folke/tokyonight.nvim",
     lazy = vim.g.colorscheme ~= "tokyonight",
     priority = 1000,
-    opts = { style = "storm", transparent = true }, -- 同上：切到 tokyonight 也保持透明
+    opts = { style = "storm" },
   },
 
   -- catppuccin
@@ -15,9 +15,6 @@ return {
     priority = 1000,
     name = "catppuccin",
     opts = {
-      -- 不画编辑器背景（bg = NONE），把画布交给终端 —— 这样终端的 opacity / acrylic 才看得见。
-      -- 注意：winblend/pumblend 是另一层（浮窗与弹出菜单和「编辑器内容」混色），不能替代它。
-      transparent_background = true,
       lsp_styles = {
         underlines = {
           errors = { "undercurl" },
@@ -60,17 +57,7 @@ return {
       custom_highlights = function(colors)
         return {
           TreesitterContext = { fg = colors.text, bg = colors.base },
-          -- 透明模式下 catppuccin 会把下面这些「盖在代码上」的面板也清成透明，
-          -- 结果就是底下的代码透上来、两层字叠在一起。这里强制回不透明底色。
-          NormalFloat = { bg = colors.mantle },
-          FloatBorder = { bg = colors.mantle },
-          Pmenu = { bg = colors.mantle },
-          NotifyBackground = { bg = colors.mantle },
-          LazyNormal = { bg = colors.mantle },
-          LazyButton = { bg = colors.surface0 },
-          LazyButtonActive = { bg = colors.surface1 },
-          TroubleNormal = { bg = colors.crust },
-          SnacksPickerNormal = { bg = colors.base },
+          -- （透明背景那套面板覆盖已撤掉；若以后重开透明，做法记在仓库根目录待办文档里）
           TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } },
           TreesitterContextLineNumber = { fg = colors.overlay0, bg = colors.base },
         }
