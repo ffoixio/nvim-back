@@ -93,6 +93,10 @@ local function palette()
   return ok2 and pal or nil
 end
 
+--- 当前配色的调色板（非 catppuccin 配色时为 nil）
+---@return table<string, string>|nil
+M.palette = palette
+
 ---@param group string
 ---@param field "bg"|"fg"
 ---@param value string|integer

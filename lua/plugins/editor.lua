@@ -296,6 +296,29 @@ return {
       -- 加粗来自 gui_style.bg（默认 "BOLD"），这里去掉，保持"细胶囊"观感。
       gui_style = { fg = "NONE", bg = "NONE" },
     },
+    config = function(_, opts)
+      -- 胶囊配色：底色用低饱和灰面（surface1），字用语义色 —— 比插件默认的“实底 + 反色字”柔和。
+      -- 不复刻插件的“关键词 → 颜色”映射：它算完默认色后 TodoFg<KW> 里就是语义色，这里直接拿来用。
+      --
+      -- 为什么包一层 colors() 而不是 setup() 之后直接改：插件在 vim_did_enter == 0 时会把真正的
+      -- setup 推迟到 defer_fn（config.lua:90），setup() 返回时 options.keywords 还是 nil；而且它自己
+      -- 在 ColorScheme 时也会重算 colors（highlight.lua:428，取的是模块当前的 .colors，所以这层包装
+      -- 换配色后依然有效）。
+      local C = require("todo-comments.config")
+      local orig = C.colors
+      C.colors = function(...)
+        orig(...)
+        local pal = require("util.transparency").palette()
+        local bg = (pal and pal.surface1) or vim.api.nvim_get_hl(0, { name = "NormalFloat" }).bg
+        for kw in pairs(C.options.keywords or {}) do
+          local fg = vim.api.nvim_get_hl(0, { name = "TodoFg" .. kw }).fg
+          if bg and fg then
+            vim.api.nvim_set_hl(0, "TodoBg" .. kw, { bg = bg, fg = fg })
+          end
+        end
+      end
+      require("todo-comments").setup(opts)
+    end,
     -- stylua: ignore
     keys = {
       { "]t", function() require("todo-comments").jump_next() end, desc = "Next Todo Comment" },
