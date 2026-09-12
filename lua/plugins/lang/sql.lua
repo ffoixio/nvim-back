@@ -17,6 +17,19 @@ return {
     "kristijanhusak/vim-dadbod-completion",
     dependencies = "vim-dadbod",
     ft = sql_ft,
+    init = function()
+      -- NOTE: 插件自带的 after/plugin 会 require("completion")（老引擎 completion-nvim 的接口）并调用
+      -- completion.addCompletionSource(...)。某些会话里存在同名但残缺的模块，于是进插入模式就报
+      -- "attempt to call field 'addCompletionSource' (a nil value)"（本机出现过一次，之后又消失，无法复现）。
+      -- 我们用的是 blink（见本文件底部 providers.dadbod = vim_dadbod_completion.blink），这条老分支无用，
+      -- 所以放个空的 preload 兜底：模块缺失或残缺都不再报错，也不影响 blink 的 dadbod 源。
+      local ok, mod = pcall(require, "completion")
+      if not ok or type(mod) ~= "table" or type(mod.addCompletionSource) ~= "function" then
+        package.preload["completion"] = function()
+          return { addCompletionSource = function() end }
+        end
+      end
+    end,
   },
 
   {
