@@ -118,4 +118,5 @@ vim.o.statusline = " %{v:lua.Status.mode()} | %{v:lua.Status.branch()} | %{v:lua
 - ~~mason 孤儿包 `golangci-lint`~~ / ~~parser 孤儿 `go`/`gomod`/`gosum`/`gowork`~~：**已解决**——2026-09-13 起 Go 进"以后要用"的清单，`plugins/lang/go.lua` 已接上 gopls + goimports + golangci-lint，那几个 parser 就是它的高亮。
 - **parser 孤儿 `haskell`**：仍然是孤儿（配置里没有 Haskell），无害；要清就删 `~/.local/share/nvim/site/parser/haskell.so` 与 `parser-info/haskell.revision`。
   注：**`dtd` 不是孤儿**——它是声明里 `xml` 的 `requires`（`parsers.lua:2284`），别删。
+- **透明模块的 `palette()` 只认 catppuccin**：换非 catppuccin 主题时会静默回退成 frappe 调色板（开着透明无所谓，关掉透明后面板底色会是 frappe 的灰）。真要用别的主题再给它加分支（tokyonight 是 `require("tokyonight.colors").setup()`）。
 - ~~启动耗时剖析~~：**已做（2026-09-13）** —— 实测总启动 ≈ 20ms，最大项是 `require("config.lazy")` ≈ 8.6ms、`config.autocmds` ≈ 0.13ms，没有值得优化的项。

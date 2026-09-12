@@ -1,5 +1,8 @@
 # 将 LazyVim 默认配置“去包装”为独立 Neovim 配置
 
+> **状态：已完成（历史文档）** —— 这是当年"去 LazyVim 化"的计划原文，保留作决策记录。
+> 当前结构与约定请看 `TRANSPARENCY.md`、`CHEATS.md`、`TODO.md`，以及 `:checkhealth config`。
+
 ## 1. 目标
 
 把 LazyVim 在**默认状态（用户未启用任何 extra）**下提供的全部行为，抽取为一份**自包含**的 Neovim 配置，放进 `~/.config/nvim`：

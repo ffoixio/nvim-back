@@ -24,7 +24,9 @@ Neovim 只能做两件事之一：**画背景**，或者**完全不画**（`bg =
 `lua/util/transparency.lua` 里两张表，是唯一的事实来源：
 
 - `M.follow`：跟着透明状态走的组，格式 `{组名, 字段, 透明时的值, 不透明时的值}`
-- `M.always_opaque`：**始终**实底的面板，格式 `{组名, 字段, 值}`（只在透明模式下强制）
+- `M.always_opaque`：**透明模式下仍强制实底**的例外，格式 `{组名, 字段, 值}`；**默认为空**。
+  早期版本把 picker / lazy / 通知这些都钉在这里，结果是"遇到一个浮窗补一条"；现在它们统一走 `M.follow`
+  （所有浮窗底色都来自 `NormalFloat` / `Pmenu` 两个根），只有确实看不清的才加回这张表一行。
 - 值只写两种：**catppuccin 调色板键名**（`base`/`mantle`/`surface0`…）或 `"NONE"`
 
 两个消费者读同一张表：
@@ -56,10 +58,16 @@ vim.api.nvim_set_hl(0, "WhichKeyNormal", { link = "NormalFloat", default = true 
 **结论：凡是会被插件用 `default = true` 链接的组，覆盖时必须连 `fg` 一起写死**（表里就是同一个组写两行）。
 已知这类组：`WhichKeyNormal` / `WhichKey`（which-key）、`SnacksNormalNC` / `FloatFooter`（默认 link 别的组）。
 
-### 坑 2：面板必须保持实底
+### 坑 2：面板默认也透明（"默认透明 + 例外"）
 
-picker / lazy / 补全菜单 / 通知是「盖在代码上」的：一旦透明，底下代码会透上来变成两层字。
-所以它们在 `M.always_opaque` 里，两种状态都强制实底。
+早期版本认为 picker / lazy / 补全菜单 / 通知「盖在代码上」，一律强制实底 —— 代价是每装一个新插件
+都要手动补一条，而且随时可能漏（漏了就是"某处莫名一块底色"）。现在改成：
+
+- **默认跟随开关**：一切浮窗底色都来自 `NormalFloat` / `Pmenu` 两个根，接进 `M.follow` 即可全覆盖；
+- **例外显式列出**：确实看不清的（两层字叠一起）才写进 `M.always_opaque`，一行搞定，且默认是空表。
+
+注意：`always_opaque` 之外还有两处"看起来是实底"的，那是有意为之、不在这个机制里 ——
+picker 的选中行（链接到 `Visual`）与 DBUI 侧栏（`NormalSB`，见 `plugins/lang/sql.lua`）。
 
 ### 坑 3：查插件的底色组要看它的 `winhighlight`
 
@@ -170,7 +178,17 @@ show("WhichKeyNormal")                 -- 期望仍然是 bg=nil + fg（盖不�
 | `lua/config/keymaps.lua` | `<leader>uT` 开关（Snacks.toggle，调 `util.transparency`） |
 | `~/.local/state/nvim/transparent_background` | 记住的开关状态（`true`/`false`） |
 
-## 8. 保持不变成屎山的三条约束
+## 8. 换主题（`config/theme.lua` 里改 `active`）时要注意两件事
+
+1. **透明选项名各主题不同**：`M.themes.<主题>.transparent(on)` 里已经为六个主题各写了一份片段
+   （`transparent_background` / `transparent` / `styles.transparency` / `options.transparent` /
+   `transparent_mode` / `transparent_background_level`）。换到没实测过的主题时，先确认这一项真的生效。
+2. **`palette()` 目前只认 catppuccin**：它从 `vim.g.colors_name` 的 `catppuccin-XXX` 后缀取 flavour，
+   换别的主题会**静默拿到 frappe 的调色板** —— 开着透明时无所谓（值都是 `NONE`），但关掉透明后
+   面板底色会是 frappe 的灰，而不是当前主题的。真要长期用别的主题，就给 `palette()` 加分支
+   （tokyonight 是 `require("tokyonight.colors").setup()`），见 `TODO.md`。
+
+## 9. 保持不变成屎山的三条约束
 
 1. **只有一张表**：所有透明相关的高亮组都在 `M.follow` / `M.always_opaque`，不要在各处写特判；
 2. **两个入口读同一张表**：编译期（`custom_highlights`）与运行时（`M.apply`），不许各写一份；

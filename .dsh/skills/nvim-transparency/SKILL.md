@@ -16,7 +16,8 @@ whenToUse: 用户报告 which-key / picker / lazy / 上下文粘行 / scratch / 
 
 - 总表：`lua/util/transparency.lua`
   - `M.follow` = `{组名, 字段, 透明时的值, 不透明时的值}`（跟着透明状态走）
-  - `M.always_opaque` = `{组名, 字段, 值}`（盖在代码上的面板，两种状态都实底，否则代码透上来变两层字）
+  - `M.always_opaque` = `{组名, 字段, 值}`（透明模式下仍强制实底的**例外**，默认空表；
+    普通浮窗一律走 `M.follow` —— 所有浮窗底色都来自 `NormalFloat` / `Pmenu` 两个根）
   - 值只写 catppuccin 调色板键名（`base`/`mantle`/`surface0`…）或 `"NONE"`
 - 两个入口读同一张表：编译期 `lua/plugins/colorscheme.lua` 的 `custom_highlights`；运行时 `M.apply`（`<leader>uT` 走 `M.set`，并写状态文件）。
 - 状态文件：`stdpath("state")/transparent_background`（`true`/`false`），`M.default()` 读它。
@@ -81,7 +82,8 @@ print(h.background)  -- nil / -1 = 没画背景；2698300 = mantle；3159110 = b
 
 ## 修复流程
 
-1. 归类：跟着透明走 → `M.follow`；盖在代码上的面板 → `M.always_opaque`。
+1. 归类：**默认**加进 `M.follow`（跟着开关走）；只有"透了以后两层字看不清"的才进 `M.always_opaque`。
+   判据：浮窗里是要盯着看的代码、而且盖在同类内容上。
 2. 加一行 `{组名, 字段, 透明值, 不透明值}`，**并写一句 `NOTE:` 说明它是谁、为什么**（`<leader>st` 可列出）。
 3. 被插件 `default = true` 链接的组：补一行 `fg`（见上）。
 4. 验证：`<leader>uT` 来回切两次，两个方向都要对；再跑一次「盖不动」测试：
