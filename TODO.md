@@ -1,30 +1,81 @@
 # TODO / 待办
 
-> 这里放"想改但先不动"的事。代码里的待办写成 `TODO` 加冒号的注释，写在对应域的文件里，
-> `:TodoQuickFix`（或 `<leader>sT`）能一次列出所有 TODO/FIXME/HACK/NOTE。
+> 只记“想改但先不动”的事。代码里的待办写成 `TODO` 加冒号的注释，放在对应域的文件里；
+> `:TodoQuickFix`（或 `<leader>st`）能一次列出所有 TODO / FIXME / HACK / NOTE。
 
-## 1. 状态栏：换成 Neovim 原生 statusline，去掉 lualine
+## 状态栏：换成 Neovim 原生 statusline，去掉 lualine
 
-**代码位置**：`lua/plugins/ui.lua`（lualine 规格上方有对应的 `TODO` 注释）
+**代码位置**：`lua/plugins/ui.lua`（lualine 规格上方有对应的 TODO 注释）
 
-**动机**：原生 `vim.o.statusline` 已经够用，不必再"插件 + hack"；代价是每一项都得自己写求值函数。
+**动机**：原生 `vim.o.statusline` 已经够用，不必再“插件 + hack”；好处是以后加项不用等插件支持，
+代价是每一项都得自己写求值函数。
 
-**要迁移的信息项（12 个）**：
-mode / branch / 项目根目录 / 诊断计数 / filetype / 文件路径 / navic 面包屑 /
-lazy 更新数 / diff / 进度% / 行:列 / 时钟
+**可放的信息项 = 下面三张表的并集**（还没最终敲定，先全列出来）
 
-**分工：哪些是内置的，哪些要自己写 Lua**
+### A. Neovim 原生就有的 `%` 项（一行 Lua 都不用写）
 
-| 信息 | 原生方案 |
-|---|---|
-| 行:列 / 进度 / 文件名 / 已修改 | 内置：`%l:%c`、`%p%%`、`%f`、`%m` |
-| 时钟 | 内置：`%{strftime('%R')}` |
-| 模式名（要 `NORMAL` 而不是 `n`） | Lua：`vim.api.nvim_get_mode().mode` |
-| navic 面包屑 | Lua：`require("nvim-navic").get_location()` |
-| lazy 更新数 | Lua：`require("lazy.status").updates()`（无更新时返回 `false`，必须兜底） |
-| diff / 诊断 / git 分支 | Lua：`vim.b.gitsigns_status_dict`、`vim.diagnostic.count()`、`vim.b.gitsigns_head` |
+| 项 | 显示 | 备注 |
+|---|---|---|
+| `%t` / `%f` / `%F` | 文件名 / 相对路径 / 绝对路径 | `%t` 只有文件名 |
+| `%m` / `%M` | 修改标记 | `[+]` / `,+` |
+| `%r` / `%R` | 只读标记 | |
+| `%h` / `%H` | help 缓冲区标记 | |
+| `%w` / `%W` | preview 窗口标记 | |
+| `%y` / `%Y` | 文件类型 | `[lua]` / `,LUA` |
+| `%q` | quickfix / location list 指示 | |
+| `%k` | keymap 名 | 用了 lmap 才有 |
+| `%n` | 缓冲区编号 | |
+| `%b` / `%B` | 光标下字符（十进制 / 十六进制） | |
+| `%o` / `%O` | 光标处字节偏移 | |
+| `%l` / `%L` | 当前行 / 总行数 | |
+| `%c` / `%v` / `%V` | 列 / 虚拟列 | `%V` 与 `%c` 相同时不显示 |
+| `%p` | 文件百分比 | 就是现在那个 `93%` |
+| `%P` | 可视窗口内的百分比 | 和 ruler 一样，固定 3 字符 |
+| `%S` | **showcmd 内容**（待完成的按键） | 相当于 noice 显示的那个 `gj` / `2d` |
+| `%a` | 参数列表 {当前}/{总数} | |
+| `%{expr}` / `%{%expr%}` | 求值（后者把结果再当格式串解析） | |
+| `%( %)` | 分组，可统一设宽度 / 对齐 | |
+| `%=` | 左右分界 | |
+| `%#Group#` | 切换高亮组 | |
+| `%%` | 字面量 % | |
 
-**已验证可行的骨架**（在沙箱里真实渲染过；7 个 `v:lua` 函数，全部包了 pcall 兜底）：
+**用 `%{...}` 包一层 Vimscript 表达式就能拿到（仍算原生，不需要 Lua 模块）**：
+
+- `%{&fenc}` 编码、`%{&ff}` 换行格式（fileformat）
+- `%{getfsize(bufname('%'))}` 文件大小、`%{hostname()}` 主机名
+- `%{strftime('%R')}` 时钟、`%{tabpagenr()}/%{tabpagenr('$')}` 页签
+
+### B. lualine 自带、但需要自己写 Lua 的组件
+
+| 组件 | 显示 | 原生替代方案 |
+|---|---|---|
+| mode | 模式名 `NORMAL` | `%{mode()}` 只给 `n`，得自己映射 |
+| branch | git 分支 | gitsigns 的 `vim.b.gitsigns_head` |
+| diagnostics | 诊断计数 | `vim.diagnostic.count(0)` |
+| diff | 增 / 删 / 改行数 | `vim.b.gitsigns_status_dict` |
+| location | 行:列 | 原生 `%l:%c` 就够 |
+| progress | 百分比（含 `Top`/`Bot` 变体） | 原生 `%p%%`；要变体才写 Lua |
+| searchcount | 搜索计数 `3/12` | `vim.fn.searchcount()` |
+| selectioncount | 选中行数 | `vim.fn.line("v")` 之类 |
+| lsp_status | LSP 客户端名 | `vim.lsp.get_clients()` |
+| filetype | 类型 / 图标 | 原生 `%y`；要图标才写 Lua |
+| encoding / fileformat / filesize / hostname / datetime | 编码 / 换行 / 大小 / 主机 / 时钟 | 见 A 表，原生即可 |
+| filename | 路径 | 原生 `%f` / `%t`；你的 `pretty_path()` 要 Lua |
+| buffers / tabs / windows | 缓冲区、页签、窗口列表 | 需要 Lua 遍历 |
+| special | 所在目录 | `%{expand('%:h')}` |
+
+### C. 你配置里自定义的（迁移时必须自己搬）
+
+| 组件 | 来源 | 说明 |
+|---|---|---|
+| 项目根目录名 | `util/lualine.lua` 的 `root_dir()` | 可简化成 `vim.fs.basename(root.get())` |
+| 相对路径（最多 3 段、文件名加粗） | `util/lualine.lua` 的 `pretty_path()` | 逻辑较长，建议整个 util 搬过去 |
+| navic 面包屑 | nvim-navic | `require("nvim-navic").get_location()` |
+| lazy 更新数 | `lazy.status.updates()` | 无更新时返回 `false`，必须兜底 |
+| noice 命令 / 模式 | `noice.api.status.*` | 待完成命令、recording 等 |
+| profiler 状态 | `Snacks.profiler.status()` | 只在剖析时出现 |
+
+### 骨架（已实测渲染通过）
 
 ```lua
 Status = {}
@@ -50,49 +101,14 @@ Status.diag = safe(function()
   return ("E%d W%d I%d H%d"):format(d[1] or 0, d[2] or 0, d[3] or 0, d[4] or 0)
 end)
 
-vim.o.statusline = " %{v:lua.Status.mode()} │ %{v:lua.Status.branch()} │ %{v:lua.Status.path()} %{v:lua.Status.navic()} %= %{v:lua.Status.updates()} %{v:lua.Status.diff()} %{v:lua.Status.diag()} │ %p%% │ %l:%c │ %{strftime('%R')} "
+vim.o.statusline = " %{v:lua.Status.mode()} | %{v:lua.Status.branch()} | %{v:lua.Status.path()} %{v:lua.Status.navic()} %= %{v:lua.Status.updates()} %{v:lua.Status.diff()} %{v:lua.Status.diag()} | %p%% | %l:%c | %{strftime('%R')} "
 ```
 
-**坑**
+### 坑
+
 - `%{}` **每次重绘都会求值** → 函数要便宜，必要时自己缓存。
-- 没数据要返回空串：`updates()` 在没更新时返回 `false`，直接放进状态栏会显示成 `false`。
+- 没数据要返回空串：`updates()` 无更新时返回 `false`，直接塞进状态栏会显示成 `false`。
 - 左右对齐靠 `%=`；高亮要自己写 `%#Group#`。
-- lualine 的 `navic` 组件其实是 **nvim-navic 自己提供的**（`nvim-navic/lua/lualine/components/navic.lua`）；去掉 lualine 后要直接调 nvim-navic。
-- lualine 的 `disabled_filetypes`（dashboard / alpha 等不显示状态栏）要用 `FileType` autocmd 自己处理。
-
-## 2. 背景透明（当前：**开启中**，开关在 `lua/plugins/colorscheme.lua` 顶部）
-
-**两个入口**：
-
-- 启动默认值：`lua/plugins/colorscheme.lua` 顶部的 `transparent()`（读 `vim.g.transparent_background`，nil 视为 true）；
-- 运行时一键切换：**`<leader>uT`**（逻辑在 `lua/util/transparency.lua`，直接改高亮组——因为 catppuccin 的编译缓存不认开关变化，重新上色拿到的还是旧主题）。
-
-它同时驱动三件事：
-
-1. catppuccin `transparent_background` / tokyonight `transparent` —— 让 `Normal` 等变成 `bg=NONE`，
-   终端的 opacity 才有东西可透；
-2. `TreesitterContext` / `TreesitterContextLineNumber` 的底色：透明时 `NONE`（有底色就是一块突兀色块），
-   不透明时 `base`（和正文同色）；
-3. 透明时强制这 9 个“盖在代码上”的面板为实底（catppuccin 的透明模式会把它们清空、底下代码会透上来）：
-   `NormalFloat`、`FloatBorder`、`Pmenu`、`NotifyBackground`、`LazyNormal`、
-   `LazyButton`、`LazyButtonActive`、`TroubleNormal`、`SnacksPickerNormal`
-
-**必须保持 `winblend = 0`**（`lua/config/options.lua`）：只要 > 0 就会把浮层和背后的代码混色，
-表现为“两层字叠在一起”，跟底色无关。
-
-**环境前提，先自检**：
-- `:echo $WT_SESSION` 有值 = 确实在 Windows Terminal 里；`:echo $TMUX` 为空 = 中间没有 tmux 挡着。
-- Windows Terminal 的 `opacity` 是“**不**透明度”（100 = 完全不透明，50 = 半透明）；
-  非 Windows 11 需要 `"useAcrylic": true` 才有不模糊的透明。
-- 终端 opacity 若还是 100，开透明看起来会和没开一样。
-
-**已知副作用**（不喜欢就把开关改回 false）：状态栏、signcolumn 等也会一起变透明。
-## 3. 动画参数（已调好，一般不用动）
-
-- **滚动**：`unit = "step"`、12ms/步、`max_output_steps = 20`
-  （实测 2 步 24ms / 5 步 60ms / 20 步 240ms；旧的 `unit = "total"` 恒 150ms，
-  贴边只能滚几行时也演满 150ms，观感很怪）
-- **光标**：默认 250ms（5 步），偏慢，快速移动时"追不上"（纯视觉，不影响操作）。
-  嫌慢可调 `cursor.timing`，或 `cursor = { enable = false }` 只关光标动画。
-- **窗口缩放**：50ms。
-- `<leader>ua` 一键开关 Mini Animate，用来 A/B 对比卡顿来源。
+- 分组 `%( %)` 可以整体设宽度和截断，适合左边那串路径。
+- lualine 的 `navic` 组件其实是 **nvim-navic 自己提供的**（`nvim-navic/lua/lualine/components/navic.lua`）；去掉 lualine 后直接调 nvim-navic。
+- lualine 还有 `disabled_filetypes`（dashboard / alpha 等不显示状态栏），原生方案要用 `FileType` autocmd 处理。
