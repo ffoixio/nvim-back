@@ -91,6 +91,10 @@ map("x", ">", ">gv")
 map("n", "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Below" })
 map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Above" })
 
+-- 宏录制：裸 q 极易误触（qq）；挪到 Q，q 置空（特殊窗口里的 buffer-local q 仍生效）
+map("n", "q", "<Nop>", { desc = "禁用宏录制（防误触）" })
+map("n", "Q", "q", { desc = "录制宏" })
+
 -- lazy
 map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
 

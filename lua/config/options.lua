@@ -77,6 +77,7 @@ opt.wildmode = "longest:full,full" -- 命令行补全：先最长公共前缀再
 opt.wrap = false -- 不自动折行（默认 true）
 opt.linebreak = true -- 折行时在单词边界断行（默认 false）
 opt.shortmess:append({ W = true, I = true, c = true, C = true }) -- 精简提示信息
+opt.shortmess:append("q") -- 不显示 "recording @q" 宏录制指示（也避免 noice 状态栏滞留）
 opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" } -- 会话保存内容
 opt.undofile = true -- 持久化撤销（默认 false）
 opt.undolevels = 10000 -- 撤销层级数（默认 1000）
