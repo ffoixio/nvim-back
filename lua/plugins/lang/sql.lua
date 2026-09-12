@@ -19,12 +19,25 @@ return {
     ft = sql_ft,
     init = function()
       -- NOTE: 插件自带的 after/plugin 会 require("completion")（老引擎 completion-nvim 的接口）并调用
-      -- completion.addCompletionSource(...)。某些会话里存在同名但残缺的模块，于是进插入模式就报
-      -- "attempt to call field 'addCompletionSource' (a nil value)"（本机出现过一次，之后又消失，无法复现）。
-      -- 我们用的是 blink（见本文件底部 providers.dadbod = vim_dadbod_completion.blink），这条老分支无用，
-      -- 所以放个空的 preload 兜底：模块缺失或残缺都不再报错，也不影响 blink 的 dadbod 源。
+      -- completion.addCompletionSource(...)。我们用的是 blink（见本文件底部 providers.dadbod），这条老
+      -- 分支无用，但它一报错就会打断本次加载：
+      --   Failed to source .../after/plugin/vim_dadbod_completion.lua:8:
+      --   attempt to call field 'addCompletionSource' (a nil value)
+      -- 触发链：InsertEnter → lazy 加载 blink.cmp → 带出依赖 vim-dadbod-completion → source after/plugin。
+      --
+      -- 坑（上一版兜底失效的原因）：这个 init 里用来探测的 pcall(require, "completion") 会把查到的
+      -- （残缺）模块写进 package.loaded，而 require 先查 loaded 再查 preload → 之后设的 preload
+      -- 永远不会被用到。所以两条路都要堵：
       local ok, mod = pcall(require, "completion")
-      if not ok or type(mod) ~= "table" or type(mod.addCompletionSource) ~= "function" then
+      if ok and type(mod) == "table" then
+        if type(mod.addCompletionSource) ~= "function" then
+          mod.addCompletionSource = function() end -- 已加载的残缺模块，就地补齐
+          local src = package.searchpath("completion", package.path)
+          if src then
+            vim.notify("补齐了残缺的 completion 模块：" .. src, vim.log.levels.INFO)
+          end
+        end
+      elseif not ok then
         package.preload["completion"] = function()
           return { addCompletionSource = function() end }
         end
