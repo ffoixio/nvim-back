@@ -2,9 +2,11 @@
 -- 只做「跨插件的、这份配置特有的」检查；各插件自带的 :checkhealth <插件> 不重复。
 --   1. 基础（版本 / leader）
 --   2. 环境工具是否可用
---   3. 键位是否自洽（冲突 / 缺 desc）
---   4. 各语言就绪度（LSP / treesitter / 格式化 / lint）
---   5. mason 已装包一览
+--   3. 终端 / 复用器（是否在 zellij / tmux 里、对 nvim 有影响的设置、剪贴板与焦点事件、波浪线自测）
+--   4. 键位是否自洽（冲突 / 缺 desc）
+--   5. 模块登记（config/modules.lua 与 plugins/ 下实际文件是否对得上）
+--   6. 各语言就绪度（LSP / treesitter / 格式化 / lint；数据来自各语言模块自己的 register_lang）
+--   7. mason 已装包一览
 -- 注：第 4 节的数据由各语言模块自己登记（plugins/lang/*.lua 里的 register_lang），这里不再维护副本。
 
 local M = {}
@@ -51,6 +53,110 @@ function M.check()
   for bin, why in pairs(tools) do
     if have(bin) then h.ok(("%s（%s）"):format(bin, why)) else h.warn(("%s 未找到 — %s"):format(bin, why)) end
   end
+
+  h.start("config: 终端 / 复用器")
+  -- 目的：把"渲染/键位/剪贴板到底受不受终端与复用器影响"变成可读的事实，而不是靠猜。
+  -- 全部只读探测；外部命令都用 executable() 守卫，失败一律降级成 info。
+  local prog = vim.env.TERM_PROGRAM
+  local colorterm = vim.env.COLORTERM
+  local remote = (vim.env.SSH_CONNECTION or vim.env.SSH_TTY) and "是" or "否"
+  h.info(("终端：TERM=%s%s%s，truecolor=%s，background=%s，远程=%s"):format(
+    vim.env.TERM or "?",
+    prog and ("  TERM_PROGRAM=" .. prog) or "",
+    colorterm and ("  COLORTERM=" .. colorterm) or "",
+    tostring(vim.o.termguicolors),
+    vim.o.background,
+    remote
+  ))
+
+  if vim.env.ZELLIJ then
+    h.info("复用器：zellij（会话 " .. vim.env.ZELLIJ .. "）")
+    if vim.fn.executable("zellij") == 1 then
+      h.info("  " .. (vim.fn.system({ "zellij", "--version" }):gsub("%s+$", "")))
+    end
+    local zcfg = (vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")) .. "/zellij/config.kdl"
+    local f = io.open(zcfg, "r")
+    if f then
+      local txt = f:read("*a") or ""
+      f:close()
+      -- 只看没被注释掉的行
+      local function zopt(name, default)
+        for line in txt:gmatch("[^\n]+") do
+          if not line:match("^%s*//") then
+            local v = line:match("^%s*" .. name .. "%s+([%w%-_\"]+)")
+            if v then
+              return v
+            end
+          end
+        end
+        return default
+      end
+      local mode = zopt("default_mode", "normal")
+      local styled = zopt("styled_underlines", "(默认)")
+      local kkp = zopt("support_kitty_keyboard_protocol", "(默认 false)")
+      h.info(("  default_mode=%s  styled_underlines=%s  support_kitty_keyboard_protocol=%s"):format(mode, styled, kkp))
+      if mode ~= "locked" then
+        h.info("  ⓘ default_mode 不是 locked：zellij 会抢键。设 locked 后按 Ctrl-b 进 tmux 模式，等于前缀键")
+      end
+    else
+      h.info("  没找到 " .. zcfg .. "（走 zellij 默认配置）")
+    end
+  elseif vim.env.TMUX then
+    h.info("复用器：tmux")
+    if vim.fn.executable("tmux") == 1 then
+      h.info("  " .. (vim.fn.system({ "tmux", "-V" }):gsub("%s+$", "")))
+      local function topt(name)
+        local out = vim.fn.system({ "tmux", "show", "-g", name })
+        if vim.v.shell_error ~= 0 then
+          return nil
+        end
+        return (out:gsub("^%s*" .. vim.pesc(name) .. "%s*", ""):gsub("%s+$", ""))
+      end
+      local et = tonumber(topt("escape-time") or "")
+      if et and et > 50 then
+        h.warn(("  escape-time=%d（大于 50 会让 Esc 系列键发粘，建议设成 10）"):format(et))
+      else
+        h.info("  escape-time=" .. tostring(et))
+      end
+      local fe = topt("focus-events")
+      if fe == "off" then
+        h.warn("  focus-events=off（本配置有 FocusGained autocmd，建议设为 on）")
+      else
+        h.info("  focus-events=" .. tostring(fe))
+      end
+      h.info("  set-clipboard=" .. tostring(topt("set-clipboard")) .. "（nvim 的 + 走 OSC52 时需要 on）")
+      local feat = (topt("terminal-features") or "") .. (topt("terminal-overrides") or "")
+      if feat:find("RGB") or feat:find(":Tc") then
+        h.info("  terminal-features/overrides 里已声明真彩")
+      else
+        h.info("  没看到 RGB/Tc 声明：真彩可能没开（旧 tmux 需要往 terminal-overrides 里加 ,*:Tc）")
+      end
+    else
+      h.info("  当前 PATH 里没有 tmux，无法查询它的设置")
+    end
+  else
+    h.info("复用器：无（直接跑在终端里）")
+  end
+
+  -- nvim 侧与终端能力相关的几项
+  local osc52 = vim.ui and vim.ui.clipboard and vim.ui.clipboard.osc52 and "可用" or "无"
+  h.info(("剪贴板：has(clipboard)=%s，g:clipboard=%s，OSC52=%s"):format(
+    tostring(vim.fn.has("clipboard") == 1),
+    vim.g.clipboard ~= nil and "已自定义" or "未设置",
+    osc52
+  ))
+  local focus = vim.api.nvim_get_autocmds({ event = "FocusGained" })
+  if #focus > 0 then
+    h.info(("焦点事件：注册了 %d 个 FocusGained autocmd —— 需要终端/复用器转发焦点事件才会触发"):format(#focus))
+  end
+  h.info("鼠标：" .. (vim.o.mouse == "" and "(未开启)" or vim.o.mouse))
+  -- 波浪线自测：给一行挂上诊断下划线的高亮，肉眼确认终端/复用器是否真的画出波浪线
+  pcall(function()
+    local buf = vim.api.nvim_get_current_buf()
+    local lnum = vim.api.nvim_buf_line_count(buf)
+    vim.api.nvim_buf_set_lines(buf, lnum, lnum, false, { "  [undercurl 自测] 这行若有波浪线 = 终端/复用器支持（不支持时诊断的波浪线会降级或不显示）" })
+    vim.api.nvim_buf_add_highlight(buf, -1, "DiagnosticUnderlineError", lnum, 0, -1)
+  end)
 
   h.start("config: 键位")
   local L = vim.g.mapleader
