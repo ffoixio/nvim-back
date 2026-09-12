@@ -1,6 +1,7 @@
 -- 主题/变体用哪个在 lua/config/theme.lua 里选（切主题只改那一行），
--- 这里只描述"每个主题长什么样"。没启用的主题块带着 enabled = false，lazy 既不会加载也不会安装。
+-- 这里只描述"每个主题长什么样"：没启用的主题 enabled = false，lazy 既不加载也不安装。
 local T = require("config.theme")
+
 
 -- 背景透明状态统一由 lua/util/transparency.lua 管理（含运行时 <leader>uT 开关与状态记忆）。
 local function transparent()
@@ -12,8 +13,9 @@ local function opts(name, extra)
   return vim.tbl_deep_extend("force", T.opts(name), extra or {})
 end
 
-return {
   -- catppuccin
+
+local specs = {
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -133,46 +135,25 @@ return {
     },
   },
 
-  -- tokyonight
-  {
-    "folke/tokyonight.nvim",
-    enabled = T.enabled("tokyonight"),
-    lazy = not T.is("tokyonight"),
-    priority = 1000,
-    opts = opts("tokyonight", { transparent = transparent() }),
-  },
-
-  -- 下面四个先备着：不进 available 就不会安装、不会加载；
-  -- 想用就把 config/theme.lua 的 active / available 改一下（变体值已经写在那边了）。
-  -- 首次启用时确认一下各自的透明选项是否生效（不行就改这里的 extra）。
-  {
-    "rose-pine/neovim",
-    name = "rose-pine",
-    enabled = T.enabled("rose-pine"),
-    lazy = not T.is("rose-pine"),
-    priority = 1000,
-    opts = opts("rose-pine", { styles = { transparency = transparent() } }),
-  },
-  {
-    "EdenEast/nightfox.nvim",
-    enabled = T.enabled("nightfox"),
-    lazy = not T.is("nightfox"),
-    priority = 1000,
-    -- nightfox 没有变体字段：变体是独立的 colorscheme 名（config/theme.lua 的 scheme()）
-    opts = { options = { transparent = transparent() } },
-  },
-  {
-    "ellisonleao/gruvbox.nvim",
-    enabled = T.enabled("gruvbox"),
-    lazy = not T.is("gruvbox"),
-    priority = 1000,
-    opts = opts("gruvbox", { transparent_mode = transparent() }),
-  },
-  {
-    "neanias/everforest-nvim",
-    enabled = T.enabled("everforest"),
-    lazy = not T.is("everforest"),
-    priority = 1000,
-    opts = opts("everforest", { transparent_background_level = 2 }),
-  },
 }
+
+  -- 其余主题：repo / 变体字段 / 允许取值 / 透明选项 全部登记在 config/theme.lua 的 M.themes 里，
+  -- 这里只做装配（catppuccin 单写是因为它额外带 custom_highlights / integrations / specs）。
+  local function theme_spec(name)
+    local t = T.themes[name]
+    return {
+      t.repo,
+      name = t.plugin,
+      enabled = T.enabled(name),
+      lazy = not T.is(name),
+      priority = 1000,
+      opts = vim.tbl_deep_extend("force", T.opts(name), t.transparent(transparent())),
+    }
+  end
+  for _, name in ipairs(T.list()) do
+    if name ~= "catppuccin" then
+      specs[#specs + 1] = theme_spec(name)
+    end
+  end
+
+  return specs
