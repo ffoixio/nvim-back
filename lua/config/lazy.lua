@@ -41,15 +41,18 @@ end
 
 require("lazy").setup({
   spec = specs,
-  -- 并发拉取数（默认 20）：降到 4，进一步减少同时打开的 GitHub 连接
-  concurrency = 4,
+  -- 并发拉取数。注意 lazy 源码里的默认是 nil —— runner 只在给了数字时才限流（runner.lua:113），
+  -- 也就是"不限制"，并不是文档里常说的 20；这里显式写 20，避免一次开太多 GitHub 连接。
+  concurrency = 20,
   -- :Lazy 的浮动窗口（默认 border = "none"）
   ui = { border = "rounded" },
   defaults = {
     lazy = false, -- custom plugins load during startup
     version = false, -- always use the latest git commit
   },
-  install = { colorscheme = { "tokyonight", "habamax" } },
+  -- 装插件期间临时用的配色（不是默认主题；默认主题看 config/theme.lua 的 active）。
+  -- lazy 按顺序挑第一个能加载的；"habamax" 是内建兜底，lazy 自己也会在末尾再补一个。
+  install = { colorscheme = { "catppuccin", "habamax" } },
   checker = {
     enabled = true,
     notify = false,
