@@ -307,6 +307,8 @@ return {
     "snacks.nvim",
     opts = {
       dashboard = {
+        -- 只渲染按键列表：不含 header 区块（否则 snacks 默认的 ASCII 大字会露出来）
+        sections = { { section = "keys", gap = 1, padding = 1 } },
         preset = {
           pick = function(cmd, opts)
             local commands = { files = "files", live_grep = "grep", oldfiles = "recent" }
@@ -339,6 +341,7 @@ return {
                 vim.cmd("startinsert")
               end },
             { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
+            { key = "q", desc = "Quit", action = ":qa" },
           },
         },
       },
@@ -412,6 +415,8 @@ return {
     end,
   },
 
+  -- smear-cursor 的拖尾动画已关闭（观感难受）。想恢复：删掉下面两行注释标记。
+  --[==[
   {
     "sphamba/smear-cursor.nvim",
     event = "VeryLazy",
@@ -433,6 +438,7 @@ return {
   
     -- 顶部粘住当前函数/类的签名（读长函数时始终知道自己在哪）
   },
+  --]==]
 
   {
     "nvim-treesitter/nvim-treesitter-context",
