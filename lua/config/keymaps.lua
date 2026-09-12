@@ -95,8 +95,35 @@ map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Commen
 map("n", "q", "<Nop>", { desc = "禁用宏录制（防误触）" })
 map("n", "Q", "q", { desc = "录制宏" })
 
--- 打开内置 Vim 教程（中文）：先选章节，再临时切 locale，开完还原
--- （:Tutor 的参数是「教程名」不是语言；教程内的链接用 <CR> 也可跳章节）
+-- 中文教程的 locale 管理：
+-- :Tutor 是「调用那一刻」读 locale，而教程内的 <CR> 链接会再跑一次 :Tutor。
+-- 若那时 locale 已还原成 en，就会跳到英文版。所以：停留在 zh 教程缓冲区期间
+-- 保持 zh_CN，离开到非教程缓冲区时再还原。
+local tutor_prev_lang
+local function tutor_set_zh()
+  if vim.v.lang == "zh_CN.UTF-8" then
+    return true
+  end
+  return pcall(function() vim.cmd("language zh_CN.UTF-8") end)
+end
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = vim.api.nvim_create_augroup("config_tutor_locale", { clear = true }),
+  callback = function()
+    local is_zh_tutor = vim.bo.filetype == "tutor"
+      and vim.api.nvim_buf_get_name(0):find("/tutor/zh/", 1, true) ~= nil
+    if is_zh_tutor then
+      tutor_prev_lang = tutor_prev_lang or vim.v.lang
+      tutor_set_zh()
+    elseif tutor_prev_lang then
+      local prev = tutor_prev_lang
+      tutor_prev_lang = nil
+      pcall(function() vim.cmd("language " .. prev) end)
+    end
+  end,
+})
+
+-- 打开内置 Vim 教程（中文）：先选章节，再切到 zh_CN locale
+-- （:Tutor 的参数是「教程名」不是语言；教程内链接用 <CR> 跳章）
 map("n", "<leader>T", function()
   local dir = vim.env.VIMRUNTIME .. "/tutor/zh"
   local names = {}
@@ -112,14 +139,11 @@ map("n", "<leader>T", function()
     if not choice then
       return
     end
-    local saved = vim.v.lang
-    if not pcall(function() vim.cmd("language zh_CN.UTF-8") end) then
+    tutor_prev_lang = tutor_prev_lang or vim.v.lang
+    if not tutor_set_zh() then
       vim.notify("系统缺少 zh_CN locale，将打开英文教程", vim.log.levels.WARN)
     end
     vim.cmd("Tutor " .. choice)
-    if saved ~= "" then
-      vim.cmd("language " .. saved)
-    end
   end)
 end, { desc = "Vim 教程（中文）" })
 
