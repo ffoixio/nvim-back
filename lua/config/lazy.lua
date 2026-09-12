@@ -67,8 +67,9 @@ require("lazy").setup({
   },
 })
 
--- 加载默认主题（在 options.lua 里改 vim.g.colorscheme 切换）
-vim.cmd.colorscheme(vim.g.colorscheme or "tokyonight")
+-- 加载当前主题（切主题改 lua/config/theme.lua 的 active 一行）
+local theme = require("config.theme")
+vim.cmd.colorscheme(theme.scheme(theme.active))
 
 -- keymaps and format/root setup run after startup (VeryLazy).
 vim.api.nvim_create_autocmd("User", {

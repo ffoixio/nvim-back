@@ -6,7 +6,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
 -- 默认主题：tokyonight / catppuccin / habamax（启动时加载，见 config.lazy）
-vim.g.colorscheme = "catppuccin-frappe"
+-- 主题不在 options 里设了：见 lua/config/theme.lua（active + variant），改一处即可切换
 
 local opt = vim.opt
 

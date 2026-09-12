@@ -1,25 +1,26 @@
+-- 主题/变体用哪个在 lua/config/theme.lua 里选（切主题只改那一行），
+-- 这里只描述"每个主题长什么样"。没启用的主题块带着 enabled = false，lazy 既不会加载也不会安装。
+local T = require("config.theme")
+
 -- 背景透明状态统一由 lua/util/transparency.lua 管理（含运行时 <leader>uT 开关与状态记忆）。
 local function transparent()
   return require("util.transparency").default()
 end
 
+-- 该主题的"变体" + 它自己的设置（变体字段名各主题不同，映射在 config/theme.lua）
+local function opts(name, extra)
+  return vim.tbl_deep_extend("force", T.opts(name), extra or {})
+end
+
 return {
-
-  -- tokyonight
-  {
-    "folke/tokyonight.nvim",
-    lazy = vim.g.colorscheme ~= "tokyonight",
-    priority = 1000,
-    opts = { style = "storm", transparent = transparent() },
-  },
-
   -- catppuccin
   {
     "catppuccin/nvim",
-    lazy = vim.g.colorscheme ~= "catppuccin",
-    priority = 1000,
     name = "catppuccin",
-    opts = {
+    enabled = T.enabled("catppuccin"),
+    lazy = not T.is("catppuccin"),
+    priority = 1000,
+    opts = opts("catppuccin", {
       transparent_background = transparent(),
       lsp_styles = {
         underlines = {
@@ -61,7 +62,7 @@ return {
       -- custom_highlights 在 catppuccin 里优先级最高（compiler.lua 用 "keep" 合并），
       -- 所以能盖掉集成。
       custom_highlights = function(colors)
-        local T = require("util.transparency")
+        local Tr = require("util.transparency")
         local on = transparent()
         local hl = {}
         local function put(group, field, value)
@@ -69,12 +70,12 @@ return {
           hl[group][field] = value == "NONE" and "NONE" or colors[value]
         end
         -- 跟着透明状态走的那批：新增组只改 util/transparency.lua 里的 M.follow
-        for _, item in ipairs(T.follow) do
+        for _, item in ipairs(Tr.follow) do
           put(item[1], item[2], on and item[3] or item[4])
         end
-        -- 透明模式下把"盖在代码上"的面板强制回实底
+        -- 透明模式下把"盖在代码上"、必须实底的面板钉回来（默认空，见 util/transparency.lua）
         if on then
-          for _, item in ipairs(T.always_opaque) do
+          for _, item in ipairs(Tr.always_opaque) do
             put(item[1], item[2], item[3])
           end
         end
@@ -98,24 +99,67 @@ return {
           hl[group] = { fg = colors.base, bg = colors[key] }
         end
         -- 光标行：catppuccin 默认是 darken(surface0, 0.64, base) ≈ #3B3F52，只比底色亮一点点，
-        -- 透明背景下几乎看不出来（实测真机上确实在画，只是太暗；这个值跟透明开关无关，不是被关掉了）。
+        -- 透明背景下几乎看不出来（实测真机上确实在画，只是太暗；这个值跟透明开关无关）。
         -- 提到 surface1，和 picker 里选中行（Visual）同亮度；想更淡就换 surface0。
         hl.CursorLine = { bg = colors.surface1 }
         -- 上下文浮层底部那条细下划线：与透明无关，一直保留
         hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl
       end,
-    },
+    }),
     specs = {
       {
         "akinsho/bufferline.nvim",
         optional = true,
-        opts = function(_, opts)
+        opts = function(_, o)
           if (vim.g.colors_name or ""):find("catppuccin") then
-            opts.highlights = require("catppuccin.special.bufferline").get_theme()
+            o.highlights = require("catppuccin.special.bufferline").get_theme()
           end
         end,
       },
     },
+  },
+
+  -- tokyonight
+  {
+    "folke/tokyonight.nvim",
+    enabled = T.enabled("tokyonight"),
+    lazy = not T.is("tokyonight"),
+    priority = 1000,
+    opts = opts("tokyonight", { transparent = transparent() }),
+  },
+
+  -- 下面四个先备着：不进 available 就不会安装、不会加载；
+  -- 想用就把 config/theme.lua 的 active / available 改一下（变体值已经写在那边了）。
+  -- 首次启用时确认一下各自的透明选项是否生效（不行就改这里的 extra）。
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    enabled = T.enabled("rose-pine"),
+    lazy = not T.is("rose-pine"),
+    priority = 1000,
+    opts = opts("rose-pine", { styles = { transparency = transparent() } }),
+  },
+  {
+    "EdenEast/nightfox.nvim",
+    enabled = T.enabled("nightfox"),
+    lazy = not T.is("nightfox"),
+    priority = 1000,
+    -- nightfox 没有变体字段：变体是独立的 colorscheme 名（config/theme.lua 的 scheme()）
+    opts = { options = { transparent = transparent() } },
+  },
+  {
+    "ellisonleao/gruvbox.nvim",
+    enabled = T.enabled("gruvbox"),
+    lazy = not T.is("gruvbox"),
+    priority = 1000,
+    opts = opts("gruvbox", { transparent_mode = transparent() }),
+  },
+  {
+    "neanias/everforest-nvim",
+    enabled = T.enabled("everforest"),
+    lazy = not T.is("everforest"),
+    priority = 1000,
+    opts = opts("everforest", { transparent_background_level = 2 }),
   },
 }
