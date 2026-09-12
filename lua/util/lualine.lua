@@ -2,7 +2,7 @@ local U = require("util.init")
 local root_mod = require("util.root")
 local icons = require("config.icons").icons
 
----@class lazyvim.util.lualine
+---@class config.util.lualine
 local M = {}
 
 ---@param icon string

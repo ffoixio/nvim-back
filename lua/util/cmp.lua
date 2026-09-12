@@ -1,10 +1,10 @@
 local U = require("util.init")
 
----@class lazyvim.util.cmp
+---@class config.util.cmp
 local M = {}
 
----@alias lazyvim.util.cmp.Action fun():boolean?
----@type table<string, lazyvim.util.cmp.Action>
+---@alias config.util.cmp.Action fun():boolean?
+---@type table<string, config.util.cmp.Action>
 M.actions = {
   -- Native Snippets
   snippet_forward = function()

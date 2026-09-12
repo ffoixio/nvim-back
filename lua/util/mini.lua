@@ -1,4 +1,4 @@
----@class lazyvim.util.mini
+---@class config.util.mini
 local M = {}
 
 -- taken from MiniExtra.gen_ai_spec.buffer

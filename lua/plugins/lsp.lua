@@ -62,8 +62,8 @@ return {
         },
         -- LSP Server Settings
         -- Sets the default configuration for an LSP client (or all clients if the special name "*" is used).
-        ---@alias lazyvim.lsp.Config vim.lsp.Config|{mason?:boolean, enabled?:boolean, keys?:LazyKeysLspSpec[]}
-        ---@type table<string, lazyvim.lsp.Config|boolean>
+        ---@alias config.lsp.Config vim.lsp.Config|{mason?:boolean, enabled?:boolean, keys?:LazyKeysLspSpec[]}
+        ---@type table<string, config.lsp.Config|boolean>
         servers = {
           -- configuration for all lsp servers
           ["*"] = {

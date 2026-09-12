@@ -30,17 +30,6 @@ function M.norm(path)
 end
 
 -- fast check whether a table is a list
-function M.is_list(t)
-  local i = 0
-  for _ in pairs(t) do
-    i = i + 1
-    if t[i] == nil then
-      return false
-    end
-  end
-  return true
-end
-
 local function can_merge(v)
   return type(v) == "table" and (vim.tbl_isempty(v) or not M.is_list(v))
 end
@@ -81,28 +70,6 @@ function M.try(fn, opts)
     return msg
   end)
   return ok and result or nil
-end
-
-function M.notify(msg, opts)
-  if vim.in_fast_event() then
-    return vim.schedule(function()
-      M.notify(msg, opts)
-    end)
-  end
-  opts = opts or {}
-  if type(msg) == "table" then
-    msg = table.concat(
-      vim.tbl_filter(function(line)
-        return line or false
-      end, msg),
-      "\n"
-    )
-  end
-  local n = opts.once and vim.notify_once or vim.notify
-  n(msg, opts.level or vim.log.levels.INFO, {
-    ft = opts.lang or "markdown",
-    title = opts.title,
-  })
 end
 
 function M.error(msg, opts)
@@ -160,11 +127,6 @@ function M.set_default(option, value)
   return true
 end
 
-function M.is_loaded(name)
-  local Config = require("lazy.core.config")
-  return Config.plugins[name] and Config.plugins[name]._.loaded
-end
-
 function M.on_load(name, fn)
   if M.is_loaded(name) then
     fn(name)
@@ -188,10 +150,6 @@ function M.on_very_lazy(fn)
   })
 end
 
-function M.get_plugin(name)
-  return require("lazy.core.config").spec.plugins[name]
-end
-
 function M.has(plugin)
   return M.get_plugin(plugin) ~= nil
 end
@@ -203,6 +161,48 @@ function M.opts(name)
   end
   local Plugin = require("lazy.core.plugin")
   return Plugin.values(plugin, "opts", false)
+end
+
+function M.is_list(t)
+  local i = 0
+  for _ in pairs(t) do
+    i = i + 1
+    if t[i] == nil then
+      return false
+    end
+  end
+  return true
+end
+
+function M.get_plugin(name)
+  return require("lazy.core.config").spec.plugins[name]
+end
+
+function M.notify(msg, opts)
+  if vim.in_fast_event() then
+    return vim.schedule(function()
+      M.notify(msg, opts)
+    end)
+  end
+  opts = opts or {}
+  if type(msg) == "table" then
+    msg = table.concat(
+      vim.tbl_filter(function(line)
+        return line or false
+      end, msg),
+      "\n"
+    )
+  end
+  local n = opts.once and vim.notify_once or vim.notify
+  n(msg, opts.level or vim.log.levels.INFO, {
+    ft = opts.lang or "markdown",
+    title = opts.title,
+  })
+end
+
+function M.is_loaded(name)
+  local Config = require("lazy.core.config")
+  return Config.plugins[name] and Config.plugins[name]._.loaded
 end
 
 return M

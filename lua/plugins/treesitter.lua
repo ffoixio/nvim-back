@@ -25,16 +25,16 @@ return {
     event = { "LazyFile", "VeryLazy" },
     cmd = { "TSUpdate", "TSInstall", "TSLog", "TSUninstall" },
     opts_extend = { "ensure_installed" },
-    ---@alias lazyvim.TSFeat { enable?: boolean, disable?: string[] }
-    ---@class lazyvim.TSConfig: TSConfig
+    ---@alias config.TSFeat { enable?: boolean, disable?: string[] }
+    ---@class config.TSConfig: TSConfig
     opts = {
       -- LazyVim config for treesitter
       -- 关闭 treesitter 缩进：它会用 indentexpr 覆盖语言内置缩进
       -- （例如 C 的 cindent 被顶掉，导致 { 后回车/== 不缩进）。
       -- 改用 Vim 成熟的内置缩进（cindent/GetLuaIndent/GetPythonIndent…），行为更稳定。
-      indent = { enable = false }, ---@type lazyvim.TSFeat
-      highlight = { enable = true }, ---@type lazyvim.TSFeat
-      folds = { enable = true }, ---@type lazyvim.TSFeat
+      indent = { enable = false }, ---@type config.TSFeat
+      highlight = { enable = true }, ---@type config.TSFeat
+      folds = { enable = true }, ---@type config.TSFeat
       ensure_installed = {
         "bash",
         "zsh",
@@ -62,7 +62,7 @@ return {
         "yaml",
       },
     },
-    ---@param opts lazyvim.TSConfig
+    ---@param opts config.TSConfig
     config = function(_, opts)
       local TS = require("nvim-treesitter")
 
@@ -127,7 +127,7 @@ return {
           ---@param feat string
           ---@param query string
           local function enabled(feat, query)
-            local f = opts[feat] or {} ---@type lazyvim.TSFeat
+            local f = opts[feat] or {} ---@type config.TSFeat
             return f.enable ~= false
               and not (type(f.disable) == "table" and vim.tbl_contains(f.disable, lang))
               and treesitter.have(ft, query)

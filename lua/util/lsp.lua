@@ -1,6 +1,6 @@
 local U = require("util.init")
 
----@class lazyvim.util.lsp
+---@class config.util.lsp
 local M = {}
 
 ---@param opts? LazyFormatter| {filter?: (string|vim.lsp.get_clients.Filter)}
