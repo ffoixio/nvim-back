@@ -138,6 +138,33 @@ function M.check()
     h.error("疑似规格未包裹（会让 opts/keys/event/config 静默失效）：" .. table.concat(suspects, "  "))
   end
 
+  h.start("config: 模块登记（config/modules.lua）")
+  -- 语言/功能模块现在是"按开关逐个导入文件"，没登记的模块文件等于静默不加载，所以这里点名。
+  local modules = require("config.modules")
+  local function unregistered(dir, registered)
+    local missing = {}
+    for _, f in ipairs(vim.fn.globpath(dir, "*.lua", false, true)) do
+      local name = vim.fn.fnamemodify(f, ":t:r")
+      if registered[name] == nil then
+        missing[#missing + 1] = name
+      end
+    end
+    table.sort(missing)
+    return missing
+  end
+  local miss_feat = unregistered(proot, modules.feature) -- plugins/*.lua（lang/ 是子目录，不递归）
+  local miss_lang = unregistered(proot .. "/lang", modules.lang)
+  if #miss_feat == 0 and #miss_lang == 0 then
+    h.ok(("开关登记齐全（功能 %d 开 / 语言 %d 开）"):format(#modules.list("feature"), #modules.list("lang")))
+  else
+    if #miss_feat > 0 then
+      h.warn("功能模块未登记、不会加载：" .. table.concat(miss_feat, ", ") .. "  → 去 config/modules.lua 的 M.feature 补一行")
+    end
+    if #miss_lang > 0 then
+      h.warn("语言模块未登记、不会加载：" .. table.concat(miss_lang, ", ") .. "  → 去 config/modules.lua 的 M.lang 补一行")
+    end
+  end
+
   h.start("config: 语言就绪度")
   for _, l in ipairs(langs) do
     local missing = {}

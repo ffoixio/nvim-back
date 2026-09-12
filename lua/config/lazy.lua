@@ -27,11 +27,20 @@ Event.mappings["User LazyFile"] = Event.mappings.LazyFile
 -- capture global option defaults used by util.set_default
 require("util.init").setup()
 
+-- 功能模块与语言模块的加载清单都来自 config/modules.lua（只在那一个文件里开关）
+local modules = require("config.modules")
+local specs = {}
+for _, name in ipairs(modules.list("feature")) do
+  specs[#specs + 1] = { import = "plugins." .. name }
+end
+-- 语言模块必须逐个"文件"导入：给目录（import = "plugins.lang"）lazy 会把目录下所有文件都导进来，
+-- 开关就失效了（实测 julia 开/关插件数都是 52）。
+for _, name in ipairs(modules.list("lang")) do
+  specs[#specs + 1] = { import = "plugins.lang." .. name }
+end
+
 require("lazy").setup({
-  spec = {
-    -- import every spec file under lua/plugins/ (including plugins/lang/)
-    { import = "plugins" },
-  },
+  spec = specs,
   -- 并发拉取数（默认 20）：降到 4，进一步减少同时打开的 GitHub 连接
   concurrency = 4,
   -- :Lazy 的浮动窗口（默认 border = "none"）
