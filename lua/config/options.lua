@@ -40,16 +40,17 @@ opt.fillchars = {
   diff = "╱", -- diff 删除填充
   eob = " ", -- 隐藏 buffer 末尾的 ~
 }
--- 浮动窗口背景混合度（0=不透明，100=全透明）。文档说 0-30 最常用，先按你的要求开 50 试观感。
+-- 浮动窗口背景混合度（0=不透明，100=全透明）。文档说 0-30 最常用；实测 50 会让 lazy 面板和
+-- 上下文浮层透出底下的代码（两层字叠一起），所以归 0：浮层要清晰就得是实底。
 -- 影响 picker / hover / 通知 / snacks 浮窗；它是窗口局部选项，之后可以按窗口单独调。
 -- 旧配置里这里是 winblend = 15（注释着）。
-opt.winblend = 50 -- 浮动窗口背景混合（测试中）
+opt.winblend = 0 -- 浮动窗口不混色（>0 会让浮层透出底下的代码，糊成两层）
 opt.conceallevel = 2 -- 隐藏 markdown 加粗/斜体等标记（默认 0）
 opt.laststatus = 3 -- 全局单条状态栏（默认 2）
 opt.showmode = false -- 不显示 "-- INSERT --"，状态栏已展示（默认 true）
 opt.ruler = false -- 不显示右下角行列，状态栏已展示（默认 true）
 opt.pumheight = 10 -- 补全菜单最大条目数（默认 0 不限制）
-opt.pumblend = 50 -- 补全菜单背景混合（测试中；默认 0）
+opt.pumblend = 0 -- 补全菜单不混色（同上）
 
 -- ===== 搜索 =====
 opt.ignorecase = true -- 搜索忽略大小写（默认 false）

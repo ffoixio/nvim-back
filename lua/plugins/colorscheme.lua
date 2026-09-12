@@ -60,6 +60,17 @@ return {
       custom_highlights = function(colors)
         return {
           TreesitterContext = { fg = colors.text, bg = colors.base },
+          -- 透明模式下 catppuccin 会把下面这些「盖在代码上」的面板也清成透明，
+          -- 结果就是底下的代码透上来、两层字叠在一起。这里强制回不透明底色。
+          NormalFloat = { bg = colors.mantle },
+          FloatBorder = { bg = colors.mantle },
+          Pmenu = { bg = colors.mantle },
+          NotifyBackground = { bg = colors.mantle },
+          LazyNormal = { bg = colors.mantle },
+          LazyButton = { bg = colors.surface0 },
+          LazyButtonActive = { bg = colors.surface1 },
+          TroubleNormal = { bg = colors.crust },
+          SnacksPickerNormal = { bg = colors.base },
           TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } },
           TreesitterContextLineNumber = { fg = colors.overlay0, bg = colors.base },
         }

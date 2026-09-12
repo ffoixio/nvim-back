@@ -411,7 +411,9 @@ return {
           timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
         },
         scroll = {
-          timing = animate.gen_timing.linear({ duration = 150, unit = "total" }),
+          -- unit = "step"：每步固定时长，总时长随实际滚动量变化。原来 unit = "total" 是
+          -- 不管滚 2 行还是 30 行都演满 150ms，所以贴边只能滚一点时看着很怪。
+          timing = animate.gen_timing.linear({ duration = 12, unit = "step" }),
           subscroll = animate.gen_subscroll.equal({
             -- 默认最多 60 步，也就是 150ms 内最多 60 次重绘；半屏/全屏滚动时终端跟不上就掉帧。
             -- 压到 20 步（每次重绘约 7.5ms 余量）：动画仍然在，但不再一卡一卡。
