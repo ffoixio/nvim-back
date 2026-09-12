@@ -48,6 +48,7 @@ M.feature = {
   linting = true, -- nvim-lint
   lsp = true, -- LSP 总配置 + mason
   picker = true, -- snacks picker 的各项 picker
+  shell = true, -- bash / zsh（LSP、lint、解析器）
   treesitter = true,
   ui = true, -- bufferline / lualine / 状态栏 / 各种 UI
   util = true, -- 杂项小工具插件

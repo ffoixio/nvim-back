@@ -88,6 +88,18 @@ return {
         return U.error("`nvim-treesitter` opts.ensure_installed must be a table")
       end
 
+      -- 按本机存在的配置目录补几个解析器（原先在 plugins/util.lua 里，随 filetype 识别一起搬过来）
+      table.insert(opts.ensure_installed, "git_config")
+      if U.config_exists("hypr") then
+        table.insert(opts.ensure_installed, "hyprlang")
+      end
+      if U.config_exists("fish") then
+        table.insert(opts.ensure_installed, "fish")
+      end
+      if U.config_exists("rofi") or U.config_exists("wofi") then
+        table.insert(opts.ensure_installed, "rasi")
+      end
+
       -- setup treesitter
       TS.setup(opts)
       treesitter.get_installed(true) -- initialize the installed langs

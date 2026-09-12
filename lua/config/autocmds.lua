@@ -1,6 +1,9 @@
 -- 自动命令（随 config.lazy 最早加载，无插件依赖）
 
--- 强制 .v/.vh/.sv/.svh 文件类型（绕过内置 detect.v 的内容猜测）
+-- 文件类型识别统一放这里（原先还有一份散在 plugins/util.lua 里）
+-- 1) .v/.vh/.sv/.svh：绕过内置 detect.v 的内容猜测
+-- 2) EDA 约束：xdc/nxdc/sdc/upf 都是 Tcl 方言，统一当 xdc
+-- 3) 若干工具配置文件的别名（hypr/kitty/waybar/mako/rofi/rasi/vifmrc/.env.*）
 vim.filetype.add({
   extension = {
     v = "verilog",
@@ -13,6 +16,20 @@ vim.filetype.add({
     nxdc = "xdc",
     sdc = "xdc",
     upf = "xdc",
+    -- 工具配置文件
+    rasi = "rasi",
+    rofi = "rasi",
+    wofi = "rasi",
+  },
+  filename = {
+    ["vifmrc"] = "vim",
+  },
+  pattern = {
+    [".*/waybar/config"] = "jsonc",
+    [".*/mako/config"] = "dosini",
+    [".*/kitty/.+%.conf"] = "kitty",
+    [".*/hypr/.+%.conf"] = "hyprlang",
+    ["%.env%.[%w_.-]+"] = "sh",
   },
 })
 
@@ -20,6 +37,7 @@ vim.filetype.add({
 -- 写在它的 init 里要等插件真正加载（BufReadPost）才生效，不如启动时就注册稳妥（register 只是记表）。
 vim.treesitter.language.register("systemverilog", "verilog") -- .v 也用 systemverilog 语法
 vim.treesitter.language.register("tcl", "xdc") -- xdc/nxdc/sdc/upf 用 tcl 语法
+vim.treesitter.language.register("bash", "kitty") -- kitty 配置文件当 shell 高亮
 
 local function augroup(name)
   return vim.api.nvim_create_augroup("config_" .. name, { clear = true })

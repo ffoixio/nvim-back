@@ -9,6 +9,14 @@ function M.setup()
 end
 
 --- normalize a path (expand ~, use forward slashes, collapse duplicates, trim trailing slash)
+--- $XDG_CONFIG_HOME（或 ~/.config）下是否存在某个相对路径
+---@param rel string
+---@return boolean
+function M.config_exists(rel)
+  local root = vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")
+  return vim.uv.fs_stat(root .. "/" .. rel) ~= nil
+end
+
 function M.norm(path)
   if path:sub(1, 1) == "~" then
     local home = vim.uv.os_homedir()
