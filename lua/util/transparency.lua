@@ -39,29 +39,26 @@ M.follow = {
   -- 失焦的 scratch / terminal 会突然变回实底。
   { "SnacksNormalNC", "bg", "NONE", "mantle" },
   { "SnacksNormalNC", "fg", "text", "text" },         -- 同上（它默认 link NormalFloat）
-  -- NOTE: picker（<leader>s… 那批）的窗口。它们 winhighlight 里的 Normal 指向 SnacksPickerList /
-  -- SnacksPickerInput / SnacksPickerBox / SnacksPickerPreview，这几个都 link 到 SnacksPicker，
-  -- 最终落到 NormalFloat（mantle 底）——而浮窗底正是我们在透明模式下特意留实底的。
-  -- picker 要跟 scratch / terminal 一样透过去，所以把这条链的根单独放开，下面几个 link 它的会自动跟着变。
-  { "SnacksPicker", "bg", "NONE", "mantle" },
-  { "SnacksPicker", "fg", "text", "text" },           -- 带上 fg，免得只改 bg 把 fg 丢了
-  -- SnacksPickerInput 是直接 link NormalFloat 的（不经过 SnacksPicker），所以要单独列
-  { "SnacksPickerInput", "bg", "NONE", "mantle" },
-  { "SnacksPickerInput", "fg", "text", "text" },
+  -- NOTE: 浮窗 / 弹出菜单那一族的两个"根"。所有浮窗的底色最终都来自它们：
+  --   NormalFloat —— 浮窗本体（which-key、lazy、notify、Trouble、snacks 各种 picker、hover 文档…）
+  --   Pmenu       —— 补全 / 命令行弹出菜单
+  -- 把它们接进开关 = 一次性覆盖所有浮窗：以后装新插件，只要它用标准浮窗就自动跟着透，
+  -- 不用再"遇到一个加一个"（之前 picker 就是这样一个个补的）。确实需要实底的特例写回 M.always_opaque。
+  { "NormalFloat", "bg", "NONE", "mantle" },
+  { "NormalFloat", "fg", "text", "text" },
+  { "Pmenu", "bg", "NONE", "mantle" },
+  { "NotifyBackground", "bg", "NONE", "mantle" },
+  { "LazyNormal", "bg", "NONE", "mantle" },
+  { "LazyButton", "bg", "NONE", "surface0" },
+  { "LazyButtonActive", "bg", "NONE", "surface1" },
+  { "TroubleNormal", "bg", "NONE", "crust" },
 }
 
--- 始终不透明的面板：{组名, 字段, 值}
--- NOTE: 这些是"盖在代码上"的面板。透明模式下 catppuccin 会把它们也清成透明，
--- 底下的代码会透上来（两层字叠一起），所以只在透明模式下强制回实底。
-M.always_opaque = {
-  { "NormalFloat", "bg", "mantle" },
-  { "Pmenu", "bg", "mantle" },
-  { "NotifyBackground", "bg", "mantle" },
-  { "LazyNormal", "bg", "mantle" },
-  { "LazyButton", "bg", "surface0" },
-  { "LazyButtonActive", "bg", "surface1" },
-  { "TroubleNormal", "bg", "crust" },
-}
+-- 透明模式下仍强制实底的例外：{组名, 字段, 值}
+-- NOTE: 默认空。以前这里放的是"盖在代码上"的面板（NormalFloat / Pmenu / Trouble…），
+-- 结果变成"遇到一个浮窗补一个"；现在它们都在 M.follow 里跟着开关走。
+-- 如果以后觉得哪个浮窗透过去看不清（两层字叠一起），把它加回这里一行即可。
+M.always_opaque = {}
 
 local STATE = vim.fn.stdpath("state") .. "/transparent_background"
 
@@ -111,7 +108,9 @@ M.palette = palette
 local function set_field(group, field, value)
   local h = vim.api.nvim_get_hl(0, { name = group, link = false })
   h[field] = value
-  vim.api.nvim_set_hl(0, group, h)
+  -- nvim_get_hl 返回 keyset.get_hl_info，字段结构和 nvim_set_hl 要的 keyset.highlight 一致，
+  -- 但 LuaLS 不认（param-type-mismatch），显式 cast 掉这个误报。
+  vim.api.nvim_set_hl(0, group, h --[[@as vim.api.keyset.highlight]])
 end
 
 --- 应用某个状态（不写状态文件）
