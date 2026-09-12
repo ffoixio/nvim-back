@@ -305,14 +305,37 @@ return {
 
   {
     "snacks.nvim",
-    opts = {
-      dashboard = {
-        -- 只渲染按键列表：不含 header 区块（否则 snacks 默认的 ASCII 大字会露出来）
+    opts = function(_, opts)
+      -- 只渲染按键列表：不含 header 区块（否则 snacks 默认的 ASCII 大字会露出来）
+      -- stylua: ignore
+      ---@type snacks.dashboard.Item[]
+      local keys = {
+        { key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
+        { key = "n", desc = "New File", action = ":ene | startinsert" },
+        { key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
+        { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
+        { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
+        { key = "q", desc = "Quit", action = ":qa", hidden = true },
+      }
+
+      -- 每行宽度 = 最长描述 + 描述与键位之间的空隙 + 1 个键位列。
+      -- snacks 默认 width = 60：描述左对齐、键位右对齐，中间能空出 50 格。以前上方压着
+      -- 55 宽的 ASCII header 还协调，header 去掉后就成了长条，所以收紧到贴着描述。
+      local gap = 3
+      local longest = 0
+      for _, item in ipairs(keys) do
+        if not item.hidden then
+          longest = math.max(longest, vim.fn.strdisplaywidth(item.desc))
+        end
+      end
+
+      opts.dashboard = {
+        width = longest + gap + 1,
         sections = { { section = "keys", gap = 1, padding = 1 } },
         preset = {
-          pick = function(cmd, opts)
+          pick = function(cmd, pick_opts)
             local commands = { files = "files", live_grep = "grep", oldfiles = "recent" }
-            return Snacks.picker.pick(commands[cmd] or cmd, opts)
+            return Snacks.picker.pick(commands[cmd] or cmd, pick_opts)
           end,
           -- 启动页不放 ASCII 大字（极简）。想恢复：删掉下面两行注释标记即可。
           --[==[
@@ -325,19 +348,11 @@ return {
 ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
    ]],
           --]==]
-          -- stylua: ignore
-          ---@type snacks.dashboard.Item[]
-          keys = {
-            { key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
-            { key = "n", desc = "New File", action = ":ene | startinsert" },
-            { key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
-            { key = "q", desc = "Quit", action = ":qa", hidden = true },
-          },
+          keys = keys,
         },
-      },
-    },
+      }
+      return opts
+    end,
   },
 
 -- disable snacks scroll when animate is enabled
