@@ -1,3 +1,4 @@
+require("config.modules").register_lang("zig", { name = "zig", lsp = { "zls" }, ts = { "zig" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

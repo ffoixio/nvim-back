@@ -1,3 +1,4 @@
+require("config.modules").register_lang("julia", { name = "julia", lsp = { "julia-lsp" }, ts = { "julia" } })
 return {
 
   {

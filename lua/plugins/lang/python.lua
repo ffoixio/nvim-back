@@ -2,6 +2,7 @@
 local lsp = "pyright"
 local ruff = "ruff"
 
+require("config.modules").register_lang("python", { name = "python", lsp = { "pyright" }, ts = { "python" }, fmt = { "ruff" }, lint = { "ruff" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

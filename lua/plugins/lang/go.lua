@@ -1,3 +1,4 @@
+require("config.modules").register_lang("go", { name = "go", lsp = { "gopls" }, ts = { "go", "gomod", "gosum", "gowork" }, fmt = { "goimports" }, lint = { "golangci-lint" } })
 return {
   -- 语法高亮：go / gomod / gosum / gowork 覆盖 .go、go.mod、go.sum、go.work
   {

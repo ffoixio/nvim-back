@@ -1,3 +1,4 @@
+require("config.modules").register_lang("toml", { name = "toml", lsp = { "taplo" }, ts = { "toml" }, fmt = { "taplo" } })
 return {
   "neovim/nvim-lspconfig",
   opts = {

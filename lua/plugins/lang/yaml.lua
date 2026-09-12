@@ -1,3 +1,4 @@
+require("config.modules").register_lang("yaml", { name = "yaml", lsp = { "yaml-language-server" }, ts = { "yaml" } })
 return {
 
   -- yaml schema support

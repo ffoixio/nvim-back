@@ -1,3 +1,4 @@
+require("config.modules").register_lang("verilog", { name = "verilog", lsp = { "verible-verilog-ls" }, ts = { "systemverilog" }, fmt = { "verible-verilog-format" }, lint = { "verilator" } })
 return {
   -- 语法高亮
   -- 注意：nvim-treesitter main 分支只有 `systemverilog` parser（没有 `verilog`），

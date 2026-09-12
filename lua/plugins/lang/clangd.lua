@@ -1,3 +1,4 @@
+require("config.modules").register_lang("clangd", { name = "c / cpp", lsp = { "clangd" }, ts = { "c", "cpp" } })
 return {
 
   -- Add C/C++ to treesitter

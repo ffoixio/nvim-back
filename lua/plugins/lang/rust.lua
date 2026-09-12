@@ -3,6 +3,7 @@ local U = require("util.init")
 
 local diagnostics = "rust-analyzer"
 
+require("config.modules").register_lang("rust", { name = "rust", lsp = { "rust-analyzer" }, ts = { "rust" } })
 return {
 
   -- LSP for Cargo.toml

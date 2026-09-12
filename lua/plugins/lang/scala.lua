@@ -1,3 +1,4 @@
+require("config.modules").register_lang("scala", { name = "scala", ts = { "scala" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

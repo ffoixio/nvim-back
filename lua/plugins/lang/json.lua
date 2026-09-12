@@ -1,3 +1,4 @@
+require("config.modules").register_lang("json", { name = "json", lsp = { "vscode-json-language-server" }, ts = { "json" } })
 return {
 
   -- add json to treesitter

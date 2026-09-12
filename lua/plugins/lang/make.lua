@@ -1,4 +1,5 @@
 -- 构建 / 任务运行：Makefile 与 Justfile
+require("config.modules").register_lang("make", { name = "make/just", ts = { "make", "just" }, lint = { "checkmake" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

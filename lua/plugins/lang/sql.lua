@@ -6,6 +6,7 @@ local sql_ft = { "sql", "mysql", "plsql" }
 vim.g.omni_sql_default_compl_type = "syntax"
 vim.g.loaded_sql_completion = true
 
+require("config.modules").register_lang("sql", { name = "sql", ts = { "sql" }, fmt = { "sqlfluff" }, lint = { "sqlfluff" } })
 return {
 
   {

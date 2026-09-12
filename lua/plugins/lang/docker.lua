@@ -1,3 +1,4 @@
+require("config.modules").register_lang("docker", { name = "docker", lsp = { "docker-langserver" }, ts = { "dockerfile" }, lint = { "hadolint" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

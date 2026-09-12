@@ -2,6 +2,7 @@
 --   .xdc  Xilinx 约束        .nxdc  NJU XDC（nvboard 用的，只是换了个后缀）
 --   .sdc  Synopsys 约束      .upf   电源意图
 -- 后缀 → 文件类型 xdc 的映射写在 config/autocmds.lua（跟 .v/.sv 那批放一起，启动最早加载）。
+require("config.modules").register_lang("tcl", { name = "tcl / xdc", ts = { "tcl" }, lint = { "tclint" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

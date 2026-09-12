@@ -9,6 +9,10 @@
 
 local M = {}
 
+--- 语言模块自报的工具需求，键 = 模块名（由 register_lang 填充）
+---@type table<string, {name:string, lsp?:string[], ts?:string[], fmt?:string[], lint?:string[]}>
+M.lang_meta = {}
+
 ---@type table<string, boolean>
 M.lang = {
   clangd = true, -- C / C++
@@ -61,6 +65,14 @@ function M.list(kind)
   end
   table.sort(enabled)
   return enabled
+end
+
+--- 语言模块在 plugins/lang/<name>.lua 顶部调用它，自报"需要哪些工具"（health 的就绪度就用这份数据）。
+--- 放在各自文件里而不是集中一张表：数据与它描述的 spec 在同一屏内，关掉模块也不会留下过期条目。
+---@param name string 模块名（与 M.lang 的键一致）
+---@param meta {name:string, lsp?:string[], ts?:string[], fmt?:string[], lint?:string[]}
+function M.register_lang(name, meta)
+  M.lang_meta[name] = meta
 end
 
 return M

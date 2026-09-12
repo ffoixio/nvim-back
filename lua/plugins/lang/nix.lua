@@ -1,3 +1,4 @@
+require("config.modules").register_lang("nix", { name = "nix", lsp = { "nil" }, ts = { "nix" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",

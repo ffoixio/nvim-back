@@ -5,7 +5,7 @@
 --   3. 键位是否自洽（冲突 / 缺 desc）
 --   4. 各语言就绪度（LSP / treesitter / 格式化 / lint）
 --   5. mason 已装包一览
--- 注：第 4 节的期望表与 lua/plugins/lang/*.lua 对应，改语言支持时同步改这里。
+-- 注：第 4 节的数据由各语言模块自己登记（plugins/lang/*.lua 里的 register_lang），这里不再维护副本。
 
 local M = {}
 
@@ -24,34 +24,8 @@ for _, f in ipairs(vim.fn.globpath(parser_dir, "*.so", false, true)) do
   installed_ts[vim.fn.fnamemodify(f, ":t:r")] = true
 end
 
----@type {name:string, mod?:string, lsp?:string[], ts?:string[], fmt?:string[], lint?:string[]}[]
--- mod = 对应的语言模块名：config/modules.lua 里关掉的模块就不再报告就绪度；
--- 没有 mod 的表示随核心 / 工具模块走（lua 本体、shell 在 util 里）。
-local langs = {
-  { name = "lua",       lsp = { "lua-language-server" }, ts = { "lua" },  fmt = { "stylua" } },
-  { name = "c / cpp",   mod = "clangd", lsp = { "clangd" },              ts = { "c", "cpp" } },
-  { name = "cmake",     mod = "cmake", lsp = { "neocmakelsp" },         ts = { "cmake" }, fmt = { "cmake-format" }, lint = { "cmake-lint" } },
-  { name = "bash / zsh", lsp = { "bash-language-server" }, ts = { "bash", "zsh" }, fmt = { "shfmt" }, lint = { "shellcheck" } },
-  { name = "json",      mod = "json", lsp = { "vscode-json-language-server" }, ts = { "json" } },
-  { name = "yaml",      mod = "yaml", lsp = { "yaml-language-server" }, ts = { "yaml" } },
-  { name = "toml",      mod = "toml", lsp = { "taplo" },               ts = { "toml" },  fmt = { "taplo" } },
-  { name = "python",    mod = "python", lsp = { "pyright" },             ts = { "python" }, fmt = { "ruff" },       lint = { "ruff" } },
-  { name = "rust",      mod = "rust", lsp = { "rust-analyzer" },       ts = { "rust" } },
-  { name = "scala",     mod = "scala", ts = { "scala" } }, -- metals 由 coursier 自行下载，不在 mason
-  { name = "sql",       mod = "sql", ts = { "sql" },                  fmt = { "sqlfluff" }, lint = { "sqlfluff" } },
-  { name = "verilog",   mod = "verilog", lsp = { "verible-verilog-ls" },  ts = { "systemverilog" }, fmt = { "verible-verilog-format" }, lint = { "verilator" } },
-  { name = "nix",       mod = "nix", lsp = { "nil" },                 ts = { "nix" } },
-  { name = "docker",    mod = "docker", lsp = { "docker-langserver" },   ts = { "dockerfile" }, lint = { "hadolint" } },
-  { name = "go",        mod = "go", lsp = { "gopls" },                ts = { "go", "gomod", "gosum", "gowork" }, fmt = { "goimports" }, lint = { "golangci-lint" } },
-  { name = "zig",       mod = "zig", lsp = { "zls" },                  ts = { "zig" } },
-  { name = "tcl / xdc", mod = "tcl", ts = { "tcl" }, lint = { "tclint" } },
-  { name = "perl",      mod = "perl", lsp = { "perlnavigator" },        ts = { "perl" } },
-  { name = "make/just", mod = "make", ts = { "make", "just" }, lint = { "checkmake" } },
-}
 
--- 供 :checkhealth config 与审计脚本复用
-M.langs = langs
-
+-- 语言就绪度的数据源：config.modules.lang_meta（各语言模块自报），不再在这里留副本
 function M.check()
   local h = vim.health
 
@@ -168,28 +142,42 @@ function M.check()
   end
 
   h.start("config: 语言就绪度")
-  for _, l in ipairs(langs) do
-    -- 关掉的模块不报告就绪度（否则会一直提示"缺 gopls"这类已经用不到的工具）
-    if not l.mod or modules.lang[l.mod] then
-      local missing = {}
-    for _, b in ipairs(l.lsp or {}) do
-      if not have(b) then missing[#missing + 1] = "LSP:" .. b end
+  -- 每个语言模块在 plugins/lang/<name>.lua 顶部自己登记"需要哪些工具"（register_lang）；
+  -- 关掉的模块根本不会被 import，因此自然不登记、不报告 —— 不再需要在两处维护同一张表。
+  local function check_lang(l)
+    local missing = {}
+    for _, bin in ipairs(l.lsp or {}) do
+      if not have(bin) then missing[#missing + 1] = "LSP:" .. bin end
     end
     for _, p in ipairs(l.ts or {}) do
       if not installed_ts[p] then missing[#missing + 1] = "parser:" .. p end
     end
-    for _, f in ipairs(l.fmt or {}) do
-      if not have(f) then missing[#missing + 1] = "fmt:" .. f end
+    for _, bin in ipairs(l.fmt or {}) do
+      if not have(bin) then missing[#missing + 1] = "fmt:" .. bin end
     end
-    for _, f in ipairs(l.lint or {}) do
-      if not have(f) then missing[#missing + 1] = "lint:" .. f end
+    for _, bin in ipairs(l.lint or {}) do
+      if not have(bin) then missing[#missing + 1] = "lint:" .. bin end
     end
-      if #missing == 0 then
-        h.ok(l.name)
-      else
-        h.warn(("%s — 缺 %s"):format(l.name, table.concat(missing, ", ")))
-      end
-    end -- if 模块开着
+    if #missing == 0 then
+      h.ok(l.name)
+    else
+      h.warn(("%s — 缺 %s"):format(l.name, table.concat(missing, ", ")))
+    end
+  end
+  -- 不随语言模块走的两个：lua 本体；shell 归 plugins/shell.lua（feature 模块）
+  check_lang({ name = "lua", lsp = { "lua-language-server" }, ts = { "lua" }, fmt = { "stylua" } })
+  check_lang({
+    name = "bash / zsh",
+    lsp = { "bash-language-server" },
+    ts = { "bash", "zsh" },
+    fmt = { "shfmt" },
+    lint = { "shellcheck" },
+  })
+  for _, mod in ipairs(modules.list("lang")) do
+    local meta = modules.lang_meta[mod]
+    if meta then
+      check_lang(meta)
+    end
   end
 
   h.start("config: mason 已装包")

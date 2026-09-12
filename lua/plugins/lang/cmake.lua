@@ -1,3 +1,4 @@
+require("config.modules").register_lang("cmake", { name = "cmake", lsp = { "neocmakelsp" }, ts = { "cmake" }, fmt = { "cmake-format" }, lint = { "cmake-lint" } })
 return {
   {
     "nvim-treesitter/nvim-treesitter",
