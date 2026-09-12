@@ -34,6 +34,8 @@ require("lazy").setup({
   },
   -- 并发拉取数（默认 20）：降到 4，进一步减少同时打开的 GitHub 连接
   concurrency = 4,
+  -- :Lazy 的浮动窗口（默认 border = "none"）
+  ui = { border = "rounded" },
   defaults = {
     lazy = false, -- custom plugins load during startup
     version = false, -- always use the latest git commit
