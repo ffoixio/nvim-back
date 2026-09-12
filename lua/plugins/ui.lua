@@ -312,6 +312,8 @@ return {
             local commands = { files = "files", live_grep = "grep", oldfiles = "recent" }
             return Snacks.picker.pick(commands[cmd] or cmd, opts)
           end,
+          -- 启动页不放 ASCII 大字（极简）。想恢复：删掉下面两行注释标记即可。
+          --[==[
           header = [[
 ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -320,14 +322,15 @@ return {
 ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
    ]],
+          --]==]
           -- stylua: ignore
           ---@type snacks.dashboard.Item[]
           keys = {
-            { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
-            { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
-            { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { icon = " ", key = "s", desc = "Scratch（临时，不保存）", action = function()
+            { key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
+            { key = "n", desc = "New File", action = ":ene | startinsert" },
+            { key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
+            { key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
+            { key = "s", desc = "Scratch（临时，不保存）", action = function()
                 -- nofile buffer：没有文件名、不写盘、不置 modified 标记
                 -- → 退出时不提示保存，也不会留下任何东西
                 vim.cmd("enew")
@@ -335,7 +338,7 @@ return {
                 vim.bo.swapfile = false
                 vim.cmd("startinsert")
               end },
-            { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
+            { key = "l", desc = "Lazy", action = ":Lazy", hidden = true },
           },
         },
       },
