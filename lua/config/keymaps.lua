@@ -95,18 +95,32 @@ map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Commen
 map("n", "q", "<Nop>", { desc = "禁用宏录制（防误触）" })
 map("n", "Q", "q", { desc = "录制宏" })
 
--- 打开内置 Vim 教程（中文）：临时切到 zh_CN locale，开完还原
--- （:Tutor 的参数是「教程名」不是语言，语言由 locale 决定；
---  想看第二章：:Tutor vim-02-beginner，语言同样跟随 locale）
+-- 打开内置 Vim 教程（中文）：先选章节，再临时切 locale，开完还原
+-- （:Tutor 的参数是「教程名」不是语言；教程内的链接用 <CR> 也可跳章节）
 map("n", "<leader>T", function()
-  local saved = vim.v.lang
-  if not pcall(function() vim.cmd("language zh_CN.UTF-8") end) then
-    vim.notify("系统缺少 zh_CN locale，将打开英文教程", vim.log.levels.WARN)
+  local dir = vim.env.VIMRUNTIME .. "/tutor/zh"
+  local names = {}
+  for _, f in ipairs(vim.fn.globpath(dir, "*.tutor", false, true)) do
+    names[#names + 1] = vim.fn.fnamemodify(f, ":t:r")
   end
-  vim.cmd("Tutor")
-  if saved ~= "" then
-    vim.cmd("language " .. saved)
+  table.sort(names)
+  if #names == 0 then
+    vim.notify("找不到中文教程：" .. dir, vim.log.levels.ERROR)
+    return
   end
+  vim.ui.select(names, { prompt = "选择教程章节" }, function(choice)
+    if not choice then
+      return
+    end
+    local saved = vim.v.lang
+    if not pcall(function() vim.cmd("language zh_CN.UTF-8") end) then
+      vim.notify("系统缺少 zh_CN locale，将打开英文教程", vim.log.levels.WARN)
+    end
+    vim.cmd("Tutor " .. choice)
+    if saved ~= "" then
+      vim.cmd("language " .. saved)
+    end
+  end)
 end, { desc = "Vim 教程（中文）" })
 
 -- lazy
