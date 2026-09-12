@@ -135,6 +135,7 @@ return {
         Snacks.picker.yanky()
       end,
       mode = { "n", "x" },
+      desc = "Yank History",
     },
         -- stylua: ignore
     { "y", "<Plug>(YankyYank)", mode = { "n", "x" }, desc = "Yank Text" },

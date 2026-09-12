@@ -279,4 +279,6 @@ map("n", "<leader>R", function()
   dofile(vim.env.MYVIMRC)
   vim.notify("配置已重载", vim.log.levels.INFO, { title = "Config" })
 end, { desc = "重载配置" })
-map("n", "<leader>en", "<cmd>edit $MYVIMRC<cr>", { desc = "打开配置入口" })
+-- 注意：不要用 <leader>en —— 那会让 <leader>e 变成前缀（which-key 显示成组），
+-- 与 LazyVim 的「<leader>e = 资源管理器」不一致。放进 <leader>f 组里。
+map("n", "<leader>fC", "<cmd>edit $MYVIMRC<cr>", { desc = "Edit Config" })
