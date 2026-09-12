@@ -60,23 +60,28 @@ vim.o.statusline = " %{v:lua.Status.mode()} │ %{v:lua.Status.branch()} │ %{v
 - lualine 的 `navic` 组件其实是 **nvim-navic 自己提供的**（`nvim-navic/lua/lualine/components/navic.lua`）；去掉 lualine 后要直接调 nvim-navic。
 - lualine 的 `disabled_filetypes`（dashboard / alpha 等不显示状态栏）要用 `FileType` autocmd 自己处理。
 
-## 2. 背景透明（当前：**已关闭**）
+## 2. 背景透明（当前：**开启中**，开关在 `lua/plugins/colorscheme.lua` 顶部）
 
-想再试的时候按顺序做，**别只开 `transparent_background`**：
+**只有一个开关**：`local transparent = true|false`，它同时驱动三件事：
 
-1. Neovim 侧：catppuccin `transparent_background = true`（或 tokyonight `transparent = true`）——
-   只有 `Normal` 等变成 `bg=NONE`，终端的 opacity 才可能透出来。
-2. **必须同步强制这些"盖在代码上"的面板为不透明**，否则底下的代码透上来、两层字叠一起
-   （实测这些组在透明模式下会被 catppuccin 清空）：
+1. catppuccin `transparent_background` / tokyonight `transparent` —— 让 `Normal` 等变成 `bg=NONE`，
+   终端的 opacity 才有东西可透；
+2. `TreesitterContext` / `TreesitterContextLineNumber` 的底色：透明时 `NONE`（有底色就是一块突兀色块），
+   不透明时 `base`（和正文同色）；
+3. 透明时强制这 9 个“盖在代码上”的面板为实底（catppuccin 的透明模式会把它们清空、底下代码会透上来）：
    `NormalFloat`、`FloatBorder`、`Pmenu`、`NotifyBackground`、`LazyNormal`、
    `LazyButton`、`LazyButtonActive`、`TroubleNormal`、`SnacksPickerNormal`
-3. `winblend` / `pumblend` 与叠字的关系：**只要 > 0 就会把浮层和背后的代码混色**（跟底色无关）
-   → 要绝对不叠字就保持 0。
-4. 环境前提，先自检：
-   - `:echo $WT_SESSION` 有值 = 确实在 Windows Terminal 里；`:echo $TMUX` 为空 = 中间没有 tmux 挡着。
-   - Windows Terminal 的 `opacity` 是"**不**透明度"（100 = 完全不透明，50 = 半透明）；
-     非 Windows 11 需要 `"useAcrylic": true` 才能有不模糊的透明。
 
+**必须保持 `winblend = 0`**（`lua/config/options.lua`）：只要 > 0 就会把浮层和背后的代码混色，
+表现为“两层字叠在一起”，跟底色无关。
+
+**环境前提，先自检**：
+- `:echo $WT_SESSION` 有值 = 确实在 Windows Terminal 里；`:echo $TMUX` 为空 = 中间没有 tmux 挡着。
+- Windows Terminal 的 `opacity` 是“**不**透明度”（100 = 完全不透明，50 = 半透明）；
+  非 Windows 11 需要 `"useAcrylic": true` 才有不模糊的透明。
+- 终端 opacity 若还是 100，开透明看起来会和没开一样。
+
+**已知副作用**（不喜欢就把开关改回 false）：状态栏、signcolumn 等也会一起变透明。
 ## 3. 动画参数（已调好，一般不用动）
 
 - **滚动**：`unit = "step"`、12ms/步、`max_output_steps = 20`
