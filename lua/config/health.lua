@@ -24,27 +24,29 @@ for _, f in ipairs(vim.fn.globpath(parser_dir, "*.so", false, true)) do
   installed_ts[vim.fn.fnamemodify(f, ":t:r")] = true
 end
 
----@type {name:string, lsp?:string[], ts?:string[], fmt?:string[], lint?:string[]}[]
+---@type {name:string, mod?:string, lsp?:string[], ts?:string[], fmt?:string[], lint?:string[]}[]
+-- mod = 对应的语言模块名：config/modules.lua 里关掉的模块就不再报告就绪度；
+-- 没有 mod 的表示随核心 / 工具模块走（lua 本体、shell 在 util 里）。
 local langs = {
   { name = "lua",       lsp = { "lua-language-server" }, ts = { "lua" },  fmt = { "stylua" } },
-  { name = "c / cpp",   lsp = { "clangd" },              ts = { "c", "cpp" } },
-  { name = "cmake",     lsp = { "neocmakelsp" },         ts = { "cmake" }, fmt = { "cmake-format" }, lint = { "cmake-lint" } },
+  { name = "c / cpp",   mod = "clangd", lsp = { "clangd" },              ts = { "c", "cpp" } },
+  { name = "cmake",     mod = "cmake", lsp = { "neocmakelsp" },         ts = { "cmake" }, fmt = { "cmake-format" }, lint = { "cmake-lint" } },
   { name = "bash / zsh", lsp = { "bash-language-server" }, ts = { "bash", "zsh" }, fmt = { "shfmt" }, lint = { "shellcheck" } },
-  { name = "json",      lsp = { "vscode-json-language-server" }, ts = { "json" } },
-  { name = "yaml",      lsp = { "yaml-language-server" }, ts = { "yaml" } },
-  { name = "toml",      lsp = { "taplo" },               ts = { "toml" },  fmt = { "taplo" } },
-  { name = "python",    lsp = { "pyright" },             ts = { "python" }, fmt = { "ruff" },       lint = { "ruff" } },
-  { name = "rust",      lsp = { "rust-analyzer" },       ts = { "rust" } },
-  { name = "scala",     ts = { "scala" } }, -- metals 由 coursier 自行下载，不在 mason
-  { name = "sql",       ts = { "sql" },                  fmt = { "sqlfluff" }, lint = { "sqlfluff" } },
-  { name = "verilog",   lsp = { "verible-verilog-ls" },  ts = { "systemverilog" }, fmt = { "verible-verilog-format" }, lint = { "verilator" } },
-  { name = "nix",       lsp = { "nil" },                 ts = { "nix" } },
-  { name = "docker",    lsp = { "docker-langserver" },   ts = { "dockerfile" }, lint = { "hadolint" } },
-  { name = "go",        lsp = { "gopls" },                ts = { "go", "gomod", "gosum", "gowork" }, fmt = { "goimports" }, lint = { "golangci-lint" } },
-  { name = "zig",       lsp = { "zls" },                  ts = { "zig" } },
-  { name = "tcl / xdc",                                   ts = { "tcl" }, lint = { "tclint" } },
-  { name = "perl",      lsp = { "perlnavigator" },        ts = { "perl" } },
-  { name = "make/just",                                   ts = { "make", "just" }, lint = { "checkmake" } },
+  { name = "json",      mod = "json", lsp = { "vscode-json-language-server" }, ts = { "json" } },
+  { name = "yaml",      mod = "yaml", lsp = { "yaml-language-server" }, ts = { "yaml" } },
+  { name = "toml",      mod = "toml", lsp = { "taplo" },               ts = { "toml" },  fmt = { "taplo" } },
+  { name = "python",    mod = "python", lsp = { "pyright" },             ts = { "python" }, fmt = { "ruff" },       lint = { "ruff" } },
+  { name = "rust",      mod = "rust", lsp = { "rust-analyzer" },       ts = { "rust" } },
+  { name = "scala",     mod = "scala", ts = { "scala" } }, -- metals 由 coursier 自行下载，不在 mason
+  { name = "sql",       mod = "sql", ts = { "sql" },                  fmt = { "sqlfluff" }, lint = { "sqlfluff" } },
+  { name = "verilog",   mod = "verilog", lsp = { "verible-verilog-ls" },  ts = { "systemverilog" }, fmt = { "verible-verilog-format" }, lint = { "verilator" } },
+  { name = "nix",       mod = "nix", lsp = { "nil" },                 ts = { "nix" } },
+  { name = "docker",    mod = "docker", lsp = { "docker-langserver" },   ts = { "dockerfile" }, lint = { "hadolint" } },
+  { name = "go",        mod = "go", lsp = { "gopls" },                ts = { "go", "gomod", "gosum", "gowork" }, fmt = { "goimports" }, lint = { "golangci-lint" } },
+  { name = "zig",       mod = "zig", lsp = { "zls" },                  ts = { "zig" } },
+  { name = "tcl / xdc", mod = "tcl", ts = { "tcl" }, lint = { "tclint" } },
+  { name = "perl",      mod = "perl", lsp = { "perlnavigator" },        ts = { "perl" } },
+  { name = "make/just", mod = "make", ts = { "make", "just" }, lint = { "checkmake" } },
 }
 
 -- 供 :checkhealth config 与审计脚本复用
@@ -167,7 +169,9 @@ function M.check()
 
   h.start("config: 语言就绪度")
   for _, l in ipairs(langs) do
-    local missing = {}
+    -- 关掉的模块不报告就绪度（否则会一直提示"缺 gopls"这类已经用不到的工具）
+    if not l.mod or modules.lang[l.mod] then
+      local missing = {}
     for _, b in ipairs(l.lsp or {}) do
       if not have(b) then missing[#missing + 1] = "LSP:" .. b end
     end
@@ -180,11 +184,12 @@ function M.check()
     for _, f in ipairs(l.lint or {}) do
       if not have(f) then missing[#missing + 1] = "lint:" .. f end
     end
-    if #missing == 0 then
-      h.ok(l.name)
-    else
-      h.warn(("%s — 缺 %s"):format(l.name, table.concat(missing, ", ")))
-    end
+      if #missing == 0 then
+        h.ok(l.name)
+      else
+        h.warn(("%s — 缺 %s"):format(l.name, table.concat(missing, ", ")))
+      end
+    end -- if 模块开着
   end
 
   h.start("config: mason 已装包")
