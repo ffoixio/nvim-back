@@ -1,9 +1,6 @@
--- 背景透明总开关：只改这一处。true = 编辑器背景交给终端（终端的 opacity / acrylic 才看得见），
--- picker / lazy / 补全菜单 / 通知这些面板仍保持实底；false = 常规不透明。
--- 前置条件与注意事项见仓库根目录 TODO.md。
+-- 背景透明状态统一由 lua/util/transparency.lua 管理（含运行时 <leader>uT 开关与状态记忆）。
 local function transparent()
-  -- 默认开；运行时用 <leader>uT 切换会改写这个全局并重新上色（nil 视为 true）。
-  return vim.g.transparent_background ~= false
+  return require("util.transparency").default()
 end
 
 return {
@@ -64,30 +61,25 @@ return {
       -- custom_highlights 在 catppuccin 里优先级最高（compiler.lua 用 "keep" 合并），
       -- 所以能盖掉集成。
       custom_highlights = function(colors)
+        local T = require("util.transparency")
         local on = transparent()
-        -- 浮层类（上下文粘行、which-key）：透明时不能有底色，否则在透出壁纸的画布上就是一块突兀色块；
-        -- 不透明时上下文用 base（和正文同色）。浮窗是“替换”格子，只有 winblend > 0 才会和背后代码叠字。
-        local ctx_bg = on and "NONE" or colors.base
-        local hl = {
-          TreesitterContext = { fg = colors.text, bg = ctx_bg },
-          TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } },
-          TreesitterContextLineNumber = { fg = colors.overlay0, bg = ctx_bg },
-        }
-        if on then
-          -- which-key 面板（WhichKey 默认链接 NormalFloat，所以透明时它也会变成实心底）
-          hl.WhichKey = { fg = colors.text, bg = "NONE" }
-          -- 透明模式下 catppuccin 会把这些“盖在代码上”的面板也清成透明，底下代码会透上来，
-          -- 所以强制回实底（颜色取 catppuccin 不透明时的原值）。
-          hl.NormalFloat = { bg = colors.mantle }
-          hl.FloatBorder = { bg = colors.mantle }
-          hl.Pmenu = { bg = colors.mantle }
-          hl.NotifyBackground = { bg = colors.mantle }
-          hl.LazyNormal = { bg = colors.mantle }
-          hl.LazyButton = { bg = colors.surface0 }
-          hl.LazyButtonActive = { bg = colors.surface1 }
-          hl.TroubleNormal = { bg = colors.crust }
-          hl.SnacksPickerNormal = { bg = colors.base }
+        local hl = {}
+        local function put(group, field, value)
+          hl[group] = hl[group] or {}
+          hl[group][field] = value == "NONE" and "NONE" or colors[value]
         end
+        -- 跟着透明状态走的那批：新增组只改 util/transparency.lua 里的 M.follow
+        for _, item in ipairs(T.follow) do
+          put(item[1], item[2], on and item[3] or item[4])
+        end
+        -- 透明模式下把"盖在代码上"的面板强制回实底
+        if on then
+          for _, item in ipairs(T.always_opaque) do
+            put(item[1], item[2], item[3])
+          end
+        end
+        -- 上下文浮层底部那条细下划线：与透明无关，一直保留
+        hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl
       end,
     },
