@@ -62,7 +62,12 @@ vim.o.statusline = " %{v:lua.Status.mode()} │ %{v:lua.Status.branch()} │ %{v
 
 ## 2. 背景透明（当前：**开启中**，开关在 `lua/plugins/colorscheme.lua` 顶部）
 
-**只有一个开关**：`local transparent = true|false`，它同时驱动三件事：
+**两个入口**：
+
+- 启动默认值：`lua/plugins/colorscheme.lua` 顶部的 `transparent()`（读 `vim.g.transparent_background`，nil 视为 true）；
+- 运行时一键切换：**`<leader>uT`**（逻辑在 `lua/util/transparency.lua`，直接改高亮组——因为 catppuccin 的编译缓存不认开关变化，重新上色拿到的还是旧主题）。
+
+它同时驱动三件事：
 
 1. catppuccin `transparent_background` / tokyonight `transparent` —— 让 `Normal` 等变成 `bg=NONE`，
    终端的 opacity 才有东西可透；

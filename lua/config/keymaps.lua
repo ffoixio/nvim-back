@@ -83,6 +83,15 @@ map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
 --keywordprg
 map("n", "<leader>K", "<cmd>norm! K<cr>", { desc = "Keywordprg" })
 
+-- 背景透明一键开关（逻辑在 lua/util/transparency.lua，直接改高亮组、不走配色重编译）
+vim.schedule(function()
+  Snacks.toggle({
+    name = "透明背景",
+    get = function() return require("util.transparency").enabled() end,
+    set = function(state) require("util.transparency").set(state) end,
+  }):map("<leader>uT")
+end)
+
 -- better indenting
 map("x", "<", "<gv")
 map("x", ">", ">gv")
