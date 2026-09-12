@@ -95,9 +95,9 @@ local function set_field(group, field, value)
   vim.api.nvim_set_hl(0, group, h)
 end
 
---- 打开/关闭背景透明，并把状态写进状态文件（下次启动沿用）
+--- 应用某个状态（不写状态文件）
 ---@param on boolean
-function M.set(on)
+function M.apply(on)
   local p = palette()
   if not p then
     vim.notify("透明开关目前只支持 catppuccin 配色", vim.log.levels.WARN)
@@ -112,7 +112,24 @@ function M.set(on)
       set_field(item[1], item[2], p[item[3]])
     end
   end
+end
+
+--- 打开/关闭背景透明，并把状态写进状态文件（下次启动沿用）
+---@param on boolean
+function M.set(on)
+  M.apply(on)
   vim.fn.writefile({ tostring(on) }, STATE)
 end
+
+-- NOTE: which-key 这类插件会在配色之后用 nvim_set_hl(..., { link = ..., default = true }) 建自己的组；
+-- 而 default = true 会把"只设了 bg = NONE"的组当成未定义直接盖掉（实测如此），浮层就又变回实底。
+-- 所以趁 VeryLazy（插件都加载完）再应用一次：这次会带上解析后的 fg，之后 default = true 就盖不动了。
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VeryLazy",
+  once = true,
+  callback = function()
+    M.apply(M.enabled())
+  end,
+})
 
 return M
