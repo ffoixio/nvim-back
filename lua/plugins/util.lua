@@ -1,13 +1,3 @@
--- Terminal Mappings
-local function term_nav(dir)
-  ---@param self snacks.terminal
-  return function(self)
-    return self:is_floating() and "<c-" .. dir .. ">" or vim.schedule(function()
-      vim.cmd.wincmd(dir)
-    end)
-  end
-end
-
 ---@type string
 local xdg_config = vim.env.XDG_CONFIG_HOME or vim.env.HOME .. "/.config"
 
@@ -25,6 +15,14 @@ return {
       -- 性能剖析：<leader>dpp 开始/停止；停止时用 picker 展示调用链
       profiler = { enabled = true },
       quickfile = { enabled = true },
+      -- 终端键位逻辑（实测过的）：
+      --   · 打开后进的是 terminal mode，也就是"真终端"：按键原样送给 shell，包括单次
+      --     Esc（zsh 里 Esc 只是 meta 前缀，所以按下去看着像没反应）。
+      --   · 200ms 内连按两次 Esc 才进 normal mode（snacks 的 term_normal）。之所以不是
+      --     单次，是为了让 Esc 还能穿透给终端里的程序（vim / less / fzf）。
+      --   · normal mode 下：h/j/k/l 移动光标、q 隐藏终端、gf 打开光标下的文件、
+      --     [[ 和 ]] 跳上/下一个 shell 提示符。
+      --   · 关闭：terminal mode 按 <C-/>（或 <C-_>）隐藏；在 shell 里 exit / Ctrl-D 直接关窗。
       terminal = {
         win = {
           -- 以屏幕中央的浮动窗口打开（与 snacks scratch 同风格；原来默认是底部横条）
@@ -32,11 +30,10 @@ return {
           width = 0.9,
           height = 0.9,
           border = "rounded",
+          -- LazyVim 默认在这里放 <C-h/j/k/l> 标成"跳窗口"，但 snacks 对浮动窗口是把键原样
+          -- 透传给 shell 的（所以那些 desc 是假的）。删掉后按键照样透传，于是 Ctrl-L 清屏、
+          -- Ctrl-K 删到行尾这些真终端习惯保留下来；要出去就 <C-/> 隐藏，或改用 wincmd 跳窗。
           keys = {
-            nav_h = { "<C-h>", term_nav("h"), desc = "Go to Left Window", expr = true, mode = "t" },
-            nav_j = { "<C-j>", term_nav("j"), desc = "Go to Lower Window", expr = true, mode = "t" },
-            nav_k = { "<C-k>", term_nav("k"), desc = "Go to Upper Window", expr = true, mode = "t" },
-            nav_l = { "<C-l>", term_nav("l"), desc = "Go to Right Window", expr = true, mode = "t" },
             hide_slash = { "<C-/>", "hide", desc = "Hide Terminal", mode = "t" },
             hide_underscore = { "<c-_>", "hide", desc = "which_key_ignore", mode = "t" },
           },

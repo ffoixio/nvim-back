@@ -321,7 +321,7 @@ return {
       -- 每行宽度 = 最长描述 + 描述与键位之间的空隙 + 1 个键位列。
       -- snacks 默认 width = 60：描述左对齐、键位右对齐，中间能空出 50 格。以前上方压着
       -- 55 宽的 ASCII header 还协调，header 去掉后就成了长条，所以收紧到贴着描述。
-      local gap = 3
+      local gap = 15
       local longest = 0
       for _, item in ipairs(keys) do
         if not item.hidden then
