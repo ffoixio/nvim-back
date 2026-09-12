@@ -305,6 +305,30 @@ return {
       -- 在 ColorScheme 时也会重算 colors（highlight.lua:428，取的是模块当前的 .colors，所以这层包装
       -- 换配色后依然有效）。
       local C = require("todo-comments.config")
+
+      -- picker（<leader>st）里的关键词：插件用 { 居中(kw, 6), "TodoBg"..kw } 画成一条 6 格宽的灰条，
+      -- 而且 picker 自己的命中高亮（SnacksPickerMatch → Special）会把字盖成发白的颜色，看着就是个色块。
+      -- 这里把返回的 chunk 高亮组从 TodoBg<KW> 换成 TodoFg<KW>：只染字、不铺底，列宽仍然对齐。
+      -- 必须在 _setup 之后再包：插件是在 _setup 末尾才把 source 挂到 Snacks.picker.sources 上的。
+      local orig_setup = C._setup
+      C._setup = function(...)
+        orig_setup(...)
+        local src = Snacks and Snacks.picker and Snacks.picker.sources and Snacks.picker.sources.todo_comments
+        if src and src.format and not src._config_patched then
+          src._config_patched = true
+          local orig_format = src.format
+          src.format = function(item, picker)
+            local chunks = orig_format(item, picker)
+            for _, chunk in ipairs(chunks or {}) do
+              if type(chunk[2]) == "string" then
+                chunk[2] = chunk[2]:gsub("^TodoBg", "TodoFg")
+              end
+            end
+            return chunks
+          end
+        end
+      end
+
       local orig = C.colors
       C.colors = function(...)
         orig(...)
