@@ -275,7 +275,14 @@ return {
     "folke/todo-comments.nvim",
     cmd = { "TodoTrouble", "TodoTelescope" },
     event = "LazyFile",
-    opts = {},
+    opts = {
+      -- 注释关键词画成"胶囊"：wide = 关键词连同左右各一个空格一起上底色（终端做不出圆角，
+      -- 留白就是最接近胶囊的效果）。颜色不用手写：插件从配色推导
+      -- （keywords[kw].color → Diagnostic* 的 fg，所以 TODO 是 info 色、FIX 是 error 色…）。
+      highlight = { keyword = "wide" },
+      -- 加粗来自 gui_style.bg（默认 "BOLD"），这里去掉，保持"细胶囊"观感。
+      gui_style = { fg = "NONE", bg = "NONE" },
+    },
     -- stylua: ignore
     keys = {
       { "]t", function() require("todo-comments").jump_next() end, desc = "Next Todo Comment" },

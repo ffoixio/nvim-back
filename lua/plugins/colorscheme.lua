@@ -78,6 +78,22 @@ return {
             put(item[1], item[2], item[3])
           end
         end
+        -- 注释关键词（TODO / NOTE / …）：Neovim 的注解组默认是"深色字 + 彩色底"的紧贴色块，
+        -- 而 todo-comments 还会另画一层带留白的胶囊（它 extmark 的 priority = 500，必然盖在上面）。
+        -- 这里把注解组底色去掉、只留语义色文字：胶囊交给 todo-comments 画，避免两层叠着。
+        for group, key in pairs({
+          ["@comment.todo"] = "flamingo",
+          ["@comment.note"] = "blue",
+          ["@comment.hint"] = "blue",
+          ["@comment.error"] = "red",
+          ["@comment.warning"] = "yellow",
+          ["@text.todo"] = "flamingo",
+          ["@text.note"] = "blue",
+          ["@text.danger"] = "red",
+          ["@text.warning"] = "yellow",
+        }) do
+          hl[group] = { fg = colors[key], bg = "NONE" }
+        end
         -- 上下文浮层底部那条细下划线：与透明无关，一直保留
         hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl
