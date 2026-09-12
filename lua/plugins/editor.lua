@@ -276,8 +276,8 @@ return {
     cmd = { "TodoTrouble", "TodoTelescope" },
     event = "LazyFile",
     opts = {
-      -- 注释关键词画成"胶囊"：wide = 匹配范围左右各扩一个字符上底色（终端做不出圆角，
-      -- 留白就是最接近胶囊的效果）。颜色不用手写：插件从配色推导
+      -- 注释关键词画成"胶囊"：wide = 匹配范围左右各扩一个字符上底色，这两格留白既是留白、
+      -- 也是 util/todo_pill.lua 画圆角两端时用的位置。颜色不用手写：插件从配色推导
       -- （keywords[kw].color → Diagnostic* 的 fg，所以 TODO 是 info 色、FIX 是 error 色…）。
       --
       -- pattern 的双分组是故意的（见 todo-comments/highlight.lua M.match）：
@@ -296,52 +296,10 @@ return {
       -- 加粗来自 gui_style.bg（默认 "BOLD"），这里去掉，保持"细胶囊"观感。
       gui_style = { fg = "NONE", bg = "NONE" },
     },
+    -- 胶囊外观（灰面配色 / picker 里只染字 / 两端圆角）都在 lua/util/todo_pill.lua 里，
+    -- 这里只把配置交给它，spec 保持短。
     config = function(_, opts)
-      -- 胶囊配色：底色用低饱和灰面（surface1），字用语义色 —— 比插件默认的“实底 + 反色字”柔和。
-      -- 不复刻插件的“关键词 → 颜色”映射：它算完默认色后 TodoFg<KW> 里就是语义色，这里直接拿来用。
-      --
-      -- 为什么包一层 colors() 而不是 setup() 之后直接改：插件在 vim_did_enter == 0 时会把真正的
-      -- setup 推迟到 defer_fn（config.lua:90），setup() 返回时 options.keywords 还是 nil；而且它自己
-      -- 在 ColorScheme 时也会重算 colors（highlight.lua:428，取的是模块当前的 .colors，所以这层包装
-      -- 换配色后依然有效）。
-      local C = require("todo-comments.config")
-
-      -- picker（<leader>st）里的关键词：插件用 { 居中(kw, 6), "TodoBg"..kw } 画成一条 6 格宽的灰条，
-      -- 而且 picker 自己的命中高亮（SnacksPickerMatch → Special）会把字盖成发白的颜色，看着就是个色块。
-      -- 这里把返回的 chunk 高亮组从 TodoBg<KW> 换成 TodoFg<KW>：只染字、不铺底，列宽仍然对齐。
-      -- 必须在 _setup 之后再包：插件是在 _setup 末尾才把 source 挂到 Snacks.picker.sources 上的。
-      local orig_setup = C._setup
-      C._setup = function(...)
-        orig_setup(...)
-        local src = Snacks and Snacks.picker and Snacks.picker.sources and Snacks.picker.sources.todo_comments
-        if src and src.format and not src._config_patched then
-          src._config_patched = true
-          local orig_format = src.format
-          src.format = function(item, picker)
-            local chunks = orig_format(item, picker)
-            for _, chunk in ipairs(chunks or {}) do
-              if type(chunk[2]) == "string" then
-                chunk[2] = chunk[2]:gsub("^TodoBg", "TodoFg")
-              end
-            end
-            return chunks
-          end
-        end
-      end
-
-      local orig = C.colors
-      C.colors = function(...)
-        orig(...)
-        local pal = require("util.transparency").palette()
-        local bg = (pal and pal.surface1) or vim.api.nvim_get_hl(0, { name = "NormalFloat" }).bg
-        for kw in pairs(C.options.keywords or {}) do
-          local fg = vim.api.nvim_get_hl(0, { name = "TodoFg" .. kw }).fg
-          if bg and fg then
-            vim.api.nvim_set_hl(0, "TodoBg" .. kw, { bg = bg, fg = fg })
-          end
-        end
-      end
-      require("todo-comments").setup(opts)
+      require("util.todo_pill").setup(opts)
     end,
     -- stylua: ignore
     keys = {
