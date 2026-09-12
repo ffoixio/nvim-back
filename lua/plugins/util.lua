@@ -22,6 +22,8 @@ return {
     "snacks.nvim",
     opts = {
       bigfile = { enabled = true },
+      -- 性能剖析：<leader>dpp 开始/停止；停止时用 picker 展示调用链
+      profiler = { enabled = true },
       quickfile = { enabled = true },
       terminal = {
         win = {
