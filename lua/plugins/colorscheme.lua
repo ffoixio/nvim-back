@@ -78,24 +78,24 @@ return {
             put(item[1], item[2], item[3])
           end
         end
-        -- 注释关键词的注解组（@comment.todo / @comment.note / …）。
-        -- 本机实测 treesitter 捕获只有 @comment（没有任何 query 产出 @comment.todo），所以当前唯一给
-        -- 关键词上色的是 todo-comments 插件；这里保留定义是兜底：万一日后某个语言的 query 产出了它，
-        -- 也不会又冒出"深色字 + 彩色底"的紧贴色块。颜色跟插件推导出来的一致（TODO=info 的 sky、
-        -- NOTE=hint 的 teal、FIX=error 的 red、WARN=warning 的 yellow），换过去不会有色差。
+        -- 注释关键词（TODO / NOTE / …）：Neovim 的注解组默认是"深色字 + 彩色底"的紧贴色块，
+        -- 而 todo-comments 还会另画一层带留白的胶囊（它 extmark 的 priority = 500，必然盖在上面）。
+        -- 这里把注解组底色去掉、只留语义色文字：胶囊交给 todo-comments 画，避免两层叠着。
         for group, key in pairs({
-          ["@comment.todo"] = "sky",
-          ["@comment.note"] = "teal",
-          ["@comment.hint"] = "teal",
+          ["@comment.todo"] = "flamingo",
+          ["@comment.note"] = "blue",
+          ["@comment.hint"] = "blue",
           ["@comment.error"] = "red",
           ["@comment.warning"] = "yellow",
-          ["@text.todo"] = "sky",
-          ["@text.note"] = "teal",
+          ["@text.todo"] = "flamingo",
+          ["@text.note"] = "blue",
           ["@text.danger"] = "red",
           ["@text.warning"] = "yellow",
         }) do
           hl[group] = { fg = colors[key], bg = "NONE" }
         end
+        -- 上下文浮层底部那条细下划线：与透明无关，一直保留
+        hl.TreesitterContextBottom = { sp = colors.surface2, style = { "underline" } }
         return hl
       end,
     },
