@@ -26,7 +26,12 @@ opt.autowrite = true -- 切换 buffer 前自动保存（默认 false）
 opt.number = true -- 显示行号（默认 false）
 opt.relativenumber = true -- 相对行号，配合 <n>j/k 跳转（默认 false）
 opt.cursorline = true -- 高亮当前行（默认 false）
-opt.colorcolumn = "120" -- 第 120 列参考线（默认 "" 关闭）
+-- 第 120 列参考线：先关掉（2026-09-13）。
+--   理由：nvim 的 colorcolumn 只能用**背景色**画实底，它是这套透明界面里唯一一根不透明竖条；
+--   而列号在 lualine 的 location 组件里已经常显（这也是 opt.ruler = false 的理由），
+--   实际也很少越线（仓库 8040 行里只有 68 行 >120 列）。
+--   想开回来：:set cc=120（临时），或把这行取消注释。
+-- opt.colorcolumn = "120"
 opt.signcolumn = "yes" -- 签名列常驻，避免诊断符号出现时文本抖动（默认 "auto"）
 opt.termguicolors = true -- 24 位真彩色（默认 false）
 opt.scrolloff = 16 -- 光标距上下边缘保留 16 行（约半屏；屏幕 32 行时≈居中）
