@@ -1,6 +1,6 @@
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
   local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
   if vim.v.shell_error ~= 0 then
@@ -26,6 +26,11 @@ Event.mappings["User LazyFile"] = Event.mappings.LazyFile
 
 -- capture global option defaults used by util.set_default
 require("util.init").setup()
+
+-- 键位覆盖追踪（供 health 的键位小节用）。必须赶在 lazy.setup 之前装：这样 before 快照里只有
+-- nvim 自带/更早的映射，之后每一次 keymap.set 都有记录，health 才能报出「同键被覆盖」——
+-- nvim_get_keymap 只看得到最终生效的那一个（之前 <leader>uT 撞键就是这么漏掉的）。
+require("util.keytrace").setup()
 
 -- 功能模块与语言模块的加载清单都来自 config/modules.lua（只在那一个文件里开关）
 local modules = require("config.modules")

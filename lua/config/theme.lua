@@ -91,12 +91,22 @@ function M.saved()
   end
   local line = f:read("*l") or ""
   f:close()
-  local name, variant = line:match("^(%S+)%s*(%S*)$")
-  local t = name and M.themes[name]
-  if not t or not vim.tbl_contains(M.available, name) then
+  -- 容忍前后空白与 CRLF：实测带 \r 的（Windows 换行/手写空格）会让整个解析失败、保存的主题
+  -- 被静默忽略，这里先 trim 再解析，并对不可用的内容给出提示。
+  line = vim.trim(line)
+  if line == "" then
     return nil
   end
-  if variant == "" or not vim.tbl_contains(t.valid, variant) then
+  local name, variant = line:match("^(%S+)%s+(%S+)$")
+  if not name then
+    name = line:match("^(%S+)$")
+  end
+  local t = name and M.themes[name]
+  if not t or not vim.tbl_contains(M.available, name) then
+    vim.notify(("%s 里记的主题 %s 不可用，已忽略（用默认主题）"):format(M.state, tostring(name)), vim.log.levels.WARN)
+    return nil
+  end
+  if variant == nil or not vim.tbl_contains(t.valid, variant) then
     variant = nil
   end
   return name, variant
@@ -132,12 +142,16 @@ function M.set(name, variant)
   end
   M.active = name
   vim.fn.mkdir(vim.fn.fnamemodify(M.state, ":h"), "p")
-  vim.fn.writefile({ variant and ("%s %s"):format(name, variant) or name }, M.state)
+  -- 状态文件写不进去（只读目录/磁盘满）不应该让切换本身失败，提示一句就好
+  if not pcall(vim.fn.writefile, { variant and ("%s %s"):format(name, variant) or name }, M.state) then
+    vim.notify(("写不进 %s：主题本次已生效，但下次启动不会记住"):format(M.state), vim.log.levels.WARN)
+  end
   M.load()
 end
 
 -- 透明开关变化时重配当前主题（M.load 里会带着新的 transparent 选项重新 setup + :colorscheme）
 vim.api.nvim_create_autocmd("User", {
+  group = vim.api.nvim_create_augroup("config_theme", { clear = true }),
   pattern = "TransparencyChanged",
   callback = function()
     M.load()

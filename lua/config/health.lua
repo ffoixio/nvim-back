@@ -161,7 +161,7 @@ function M.check()
   h.start("config: 键位")
   local L = vim.g.mapleader
   local all = {}
-  for _, mode in ipairs({ "n", "x" }) do
+  for _, mode in ipairs({ "n", "x", "o", "i", "c", "t", "s" }) do
     for _, m in ipairs(vim.api.nvim_get_keymap(mode)) do
       if m.lhs:sub(1, #L) == L then
         -- desc 以 "+" 开头、或 rhs 为空 => which-key 的「组名占位」，不是真动作
@@ -197,6 +197,28 @@ function M.check()
     h.ok("所有 <leader> 映射都有 desc（能在 which-key 里显示）")
   else
     h.warn("缺少 desc 的映射：" .. table.concat(nodesc, " "))
+  end
+
+  -- 覆盖检测：nvim_get_keymap 只能看到最终生效的那个键，被覆盖的要靠 util/keytrace.lua 的注册
+  -- 记录。分两类：① 同键注册两次且 desc 不同（含 lazy 的「占位 -> 真实映射」，属正常，所以只
+  -- 列出来供扫一眼，不报警）② 覆盖了 nvim 自带映射（info）。
+  local rep = require("util.keytrace").report()
+  local function fmt(items)
+    local t = {}
+    for _, it in ipairs(items) do
+      t[#t + 1] = it.key .. "[" .. tostring(it.old) .. " -> " .. tostring(it.new) .. "]"
+    end
+    return table.concat(t, "；")
+  end
+  if #rep.duplicated == 0 then
+    h.ok("没有同键重复注册")
+  else
+    h.info(("同键重复注册 %d 条（占位->真实映射属正常，重点看 desc 不同的）：%s"):format(#rep.duplicated, fmt(rep.duplicated)))
+  end
+  if #rep.overwritten == 0 then
+    h.ok("没有覆盖 nvim 自带映射")
+  else
+    h.info(("覆盖了 nvim 自带映射 %d 条：%s"):format(#rep.overwritten, fmt(rep.overwritten)))
   end
 
   h.start("config: 插件规格结构")

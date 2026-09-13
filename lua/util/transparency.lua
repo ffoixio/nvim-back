@@ -188,7 +188,9 @@ end
 --- 仍是 nil）。用事件解耦，免得这里直接依赖 config.theme。
 ---@param on boolean
 function M.set(on)
-  vim.fn.writefile({ tostring(on) }, STATE)
+  if not pcall(vim.fn.writefile, { tostring(on) }, STATE) then
+    vim.notify(("写不进 %s：透明状态本次已生效，但下次启动不会记住"):format(STATE), vim.log.levels.WARN)
+  end
   M.apply(on)
   vim.api.nvim_exec_autocmds("User", { pattern = "TransparencyChanged", modeline = false })
 end

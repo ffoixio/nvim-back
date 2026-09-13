@@ -71,30 +71,6 @@ M.action = setmetatable({}, {
 ---@field filter? string|vim.lsp.get_clients.Filter
 ---@field title? string
 
----@param opts LspCommand
-function M.execute(opts)
-  local filter = opts.filter or {}
-  filter = type(filter) == "string" and { name = filter } or filter
-  local buf = vim.api.nvim_get_current_buf()
-
-  ---@cast filter vim.lsp.get_clients.Filter
-  local client = vim.lsp.get_clients(U.merge({}, filter, { bufnr = buf }))[1]
-
-  local params = {
-    command = opts.command,
-    arguments = opts.arguments,
-  }
-  if opts.open then
-    require("trouble").open({
-      mode = "lsp_command",
-      params = params,
-    })
-  else
-    vim.list_extend(params, { title = opts.title })
-    return client:exec_cmd(params, { bufnr = buf }, opts.handler)
-  end
-end
-
 ---@param filter? vim.lsp.get_clients.Filter
 function M.code_actions(filter)
   filter = filter or {}

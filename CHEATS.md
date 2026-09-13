@@ -25,6 +25,10 @@
 | `<C-a>` / `<C-x>` | 数字 +1 / -1（dial.nvim 增强） | 支持日期、true/false 等 |
 | `p` `P` `gp` `gP` `y` `Y` | 粘贴/复制走 yanky 历史 | `n` `x` 模式 |
 | `<C-Space>` | Treesitter 增量选择 | `n` `x` `o` |
+| `<C-s>`（`i` `s`） | 保存 | 覆盖了 nvim 默认的 LSP 签名帮助；插入模式要签名帮助用 `<C-k>` |
+| `[t` / `]t` | 上一个 / 下一个 TODO 注释 | 覆盖了内置 tag 跳转（`:tprevious` / `:tnext`） |
+| `[B` / `]B` | 移动 buffer 位置 | 覆盖了内置 `:brewind` / `:blast` |
+| `[b`/`]b`、`[q`/`]q`、`[d`/`]d` | buffer / quickfix / 诊断跳转 | 覆盖了内置同名动作（语义相近，desc 以插件为准） |
 
 其余为 Neovim 原生，完整清单见 `:h quickref`。
 
@@ -262,4 +266,4 @@ nvim -u init.lua --headless -i NONE \
 ```
 
 > 组名不在这份 dump 里（which-key 自己维护树），要改组名去配置里搜 `group = "…"`。
-> 已知一处待修：`<leader>d` 的组名是 `direnv`，但里面其实混着 direnv 和 profiler（见 `lua/plugins/editor.lua:86,90`）。
+> `\`<leader>d\`` 的组名已改成 "direnv / profiler"（原先那条「待修」已解决）。

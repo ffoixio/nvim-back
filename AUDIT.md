@@ -56,3 +56,27 @@
 - **启动耗时剖析**（`--startuptime`）：与「报错 / 冲突」目标无关，而且需要多次对比才有意义 → 记 TODO
 - **插件重复功能审查**（例如两套补全源）：本次没有任何症状暴露，没有证据就不动
 - **`golangci-lint` / parser 孤儿清理**：无害，且清理属于系统层（mason / parser 目录）而非配置 → 记 TODO
+
+## 3. 全量冲突扫描（2026-09-13，分支 `audit/full-scan`）
+
+方法：注册期追踪（`vim.keymap.set` / `nvim_set_keymap` / snacks toggle）+ 全模式 dump（n/x/o/i/t/c/s）
++ 与 `nvim -u NONE` 的默认映射对照 + 规格 `keys` 静态收集 + 自动命令按 (事件, pattern) 分组。
+扫描夹具在 `.test/audit/`（gitignored，可重跑）；自带对已知案例的断言，跑不出结果就报错。
+
+| # | 发现 | 结论 |
+|---|---|---|
+| K1 | 配置期重复注册 1095 条记录中，desc 不同的 **0 条** | ✅ 无真覆盖（`<leader>uT` 那类已修） |
+| K2 | 覆盖 nvim 自带映射 17 条（`an/in`、`<C-S>`、`[b/]b`、`[q/]q`、`[d/]d`、`[t/]t`、`[B/]B`、`<C-L>`） | 设计如此；已在 CHEATS §1 补记语义变化 |
+| K3 | LSP 的 `gr` 带 `nowait` 会挡住 nvim 0.11+ 内置的 `grn/gra/grr/gri` | ✅ 已去掉 `nowait` |
+| K4 | LSP 键位被 `plugins/lsp.lua` 与 `plugins/picker.lua` 重复声明 5 个（`gd/gr/gI/gy/<leader>cr`）；其中 `<leader>cr` 两处 desc 不一致 | 记 TODO：同键同名，实际生效者为后注册，`<leader>cr` 建议人工确认一次 |
+| K5 | 缓冲局部覆盖全局 4 处：`[a/]a/[A/]A`（treesitter-textobjects 的参数 textobject；全局同名键是 `:previous/:next` 等） | 设计如此（buffer-local 只在有 parser 的缓冲生效） |
+| A1 | 同一 (事件, pattern) 多 handler：`ColorScheme` 13、`FileType` 12（含 2 个匿名）、`CursorMoved` 9、`BufWritePre` 3 | 顺序已核对；"切主题 vs 启动即该主题"的全量高亮 dump 无真实差异 |
+| A2 | 匿名自动命令 18 条，其中 `User TransparencyChanged` 是我们自己写的 | ✅ 已归入 `config_theme` 组 |
+| S1 | 状态文件健壮性：未知/已删主题、非法变体、垃圾内容、空文件、多行 都能安全回退 | ✅ |
+| S2 | 状态文件带 CRLF 或前后空格时会被**静默忽略** | ✅ 已 trim；解析失败时给 WARN |
+| D1 | 文档漂移：`<leader>d` 组名的"待修"备注已过期（实际已是 direnv / profiler）；CHEATS §1 漏了 `<C-S>`（i/s）、`[t/]t`、`[B/]B` 等被占用的内置键 | ✅ 已修 |
+| D2 | 死代码：`util/lsp.lua` 的 `M.execute`、`util/lualine.lua` 的 `M.cmp_source` 全仓无引用 | ✅ 已删 |
+| P1 | `(vim.uv or vim.loop)` 兼容兜底 2 处（nvim 0.12 必带 `vim.uv`） | ✅ 已改 `vim.uv` |
+
+新增能力：`:checkhealth config` 的「键位」小节现在会报「同键重复注册」与「覆盖了 nvim 自带映射」
+（靠新增的 `lua/util/keytrace.lua` 做注册追踪；以前只用 `nvim_get_keymap`，看不见被覆盖的键）。

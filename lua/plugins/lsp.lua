@@ -79,7 +79,8 @@ return {
             keys = {
               { "<leader>cl", function() Snacks.picker.lsp_config() end, desc = "Lsp Info" },
               { "gd", vim.lsp.buf.definition, desc = "Goto Definition", has = "definition" },
-              { "gr", vim.lsp.buf.references, desc = "References", nowait = true },
+              -- NOTE: 不要加 nowait —— 那会挡住 nvim 0.11+ 内置的 grn（重命名）/gra/grr/gri（实测）
+              { "gr", vim.lsp.buf.references, desc = "References" },
               { "gI", vim.lsp.buf.implementation, desc = "Goto Implementation" },
               { "gy", vim.lsp.buf.type_definition, desc = "Goto T[y]pe Definition" },
               { "gD", vim.lsp.buf.declaration, desc = "Goto Declaration" },
