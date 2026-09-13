@@ -4,6 +4,11 @@ local cmp = require("util.cmp")
 local format = require("util.format")
 local root = require("util.root")
 
+-- NOTE: nvim 0.12 核心自带 x/o 模式的 an/in（vim/_core/defaults.lua，按语法节点扩选，没有
+-- 语法树时退回 vim.lsp.buf.selection_range）。实测 VeryLazy 之后它们会被 mini.ai 的 an/in 覆盖，
+-- 所以不需要手动清理；只有关掉 coding 模块（mini.ai）时才会露出来，那时正好可当免费功能用。
+-- 核心的 [n / ]n / [N / ]N（可视模式选上/下一个节点与兄弟节点）没有任何冲突，保留可用。
+
 -- better up/down
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
 map({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -219,7 +224,9 @@ Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vi
 Snacks.toggle.treesitter():map("<leader>uH") -- NOTE: 原先是 uT，与透明开关（vim.schedule 里注册更晚）撞键被顶掉
 Snacks.toggle.option("background", { off = "light", on = "dark" , name = "Dark Background" }):map("<leader>ub")
 Snacks.toggle.dim():map("<leader>uD")
-Snacks.toggle.animate():map("<leader>ua")
+-- NOTE: <leader>ua 归 plugins/ui.lua 里那个自定义的 "Mini Animate" 开关（它管 mini.animate，
+-- 注册更晚、本来就赢）。原来这里还挂过 Snacks.toggle.animate()（管的是 snacks 自己的动画，
+-- 两个是不同系统），同一个键注册两遍没有意义，删掉。
 Snacks.toggle.indent():map("<leader>ug")
 Snacks.toggle.scroll():map("<leader>uS")
 Snacks.toggle.profiler():map("<leader>dpp")
