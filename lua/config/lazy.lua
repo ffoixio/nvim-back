@@ -70,6 +70,10 @@ require("lazy").setup({
   },
 })
 
+-- 主题无关的字体样式层（斜体/粗体…）：必须赶在第一次 :colorscheme 之前挂上 ColorScheme 钩子，
+-- 之后每次换主题都会自动重刷。颜色还是主题说了算，见 lua/util/styles.lua 的表。
+require("util.styles")
+
 -- 加载当前主题（切主题改 lua/config/theme.lua 的 active 一行）。
 -- theme.load() 内部会校验配置并 pcall，任何问题都回退到 catppuccin/frappe。
 require("config.theme").load()

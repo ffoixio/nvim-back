@@ -10,8 +10,8 @@
 
 local M = {}
 
--- M.active = "catppuccin"
-M.active = "everforest"
+M.active = "catppuccin"
+-- M.active = "everforest"
 
 -- 四个主题全部登记：这里只表示"允许被 active 选中（并会被 lazy 安装、按需加载）"，
 -- 真正用哪个仍然只看上面 active 一行。没登记的主题 lazy 既不安装也不加载。
