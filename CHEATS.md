@@ -162,7 +162,7 @@ mini.ai 在 VeryLazy 会用同一个键覆盖它们，所以**实际生效的是
 | `<leader>ua` | Mini Animate（mini.animate 的动画） |
 | `<leader>uA` | Snacks Animate（snacks 自己的动画开关，`vim.g.snacks_animate`） |
 | `<leader>uH` | Treesitter 高亮开关 |
-| `<leader>uC` | 切配色 |
+| `<leader>uC` | 主题/变体选择：选中**即记住**（写 `stdpath("state")/theme`，重启沿用）；复位 `:lua require("config.theme").reset()` |
 | `<leader>uF` / `<leader>uf` | 自动格式化（当前 buffer / 全局） |
 | `<leader>ud` | 诊断显示 |
 | `<leader>us` | 拼写检查 |

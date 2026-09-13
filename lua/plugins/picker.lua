@@ -92,7 +92,7 @@ return {
       { "<leader>sq", function() Snacks.picker.qflist() end, desc = "Quickfix List" },
       { "<leader>su", function() Snacks.picker.undo() end, desc = "Undotree" },
       -- ui
-      { "<leader>uC", function() Snacks.picker.colorschemes() end, desc = "Colorschemes" },
+      { "<leader>uC", function() require("config.theme").pick() end, desc = "主题（选中即记住）" },
     },
   },
   {

@@ -5,11 +5,13 @@
 --   themes    —— 每个主题的全部事实：仓库、lazy 插件名、变体字段、允许取值、当前变体、透明选项片段
 --
 -- 换变体：改 M.themes.<主题>.variant 的字符串即可（取值见下面的"变体取值一览"）。
--- 换主题：改 active 一行（四个主题都在 available 里，直接改就行；想"只留一个"，把其余行注释掉）。
+-- 换主题：<leader>uC（= M.pick()）选一个，会写进状态文件、下次启动沿用，不用改文件也不用提交；
+--         想改的是"默认值"才动下面的 active 一行（状态文件不存在时用它）。
 -- 兜底：active/变体写错、主题没装、setup 报错，load() 都会回退到 M.fallback（catppuccin + frappe）。
 
 local M = {}
 
+-- 默认主题：只在没有状态文件（<leader>uC 选过就会有）时生效，所以可以放心提交
 M.active = "catppuccin"
 -- M.active = "everforest"
 
@@ -76,6 +78,114 @@ M.themes = {
     end,
   },
 }
+
+-- ===== 运行时切换 + 记忆（<leader>uC）=====
+-- 选中的主题/变体会写到 stdpath("state")/theme，下次启动优先用它；所以上面的 M.active 与
+-- M.themes.<主题>.variant 只是"没有状态文件时的默认值"，可以安心提交。
+M.state = vim.fn.stdpath("state") .. "/theme"
+
+-- 记一份文件里的默认值，reset() 用（下面的 restore 会就地覆盖 active / variant）
+M.defaults = { active = M.active, variants = {} }
+for name, t in pairs(M.themes) do
+  M.defaults.variants[name] = t.variant
+end
+
+--- 读状态文件：返回 (主题名, 变体或 nil)；文件不存在或内容非法时返回 nil
+---@return string?, string?
+function M.saved()
+  local f = io.open(M.state, "r")
+  if not f then
+    return nil
+  end
+  local line = f:read("*l") or ""
+  f:close()
+  local name, variant = line:match("^(%S+)%s*(%S*)$")
+  local t = name and M.themes[name]
+  if not t or not vim.tbl_contains(M.available, name) then
+    return nil
+  end
+  if variant == "" or not vim.tbl_contains(t.valid, variant) then
+    variant = nil
+  end
+  return name, variant
+end
+
+-- 启动时套用记忆。必须在这里（模块加载时）执行：config/lazy.lua 里的 spec 求值更晚，
+-- 各主题 spec 的 opts 才能拿到记住的那个变体。
+do
+  local name, variant = M.saved()
+  if name then
+    M.active = name
+    if variant then
+      M.themes[name].variant = variant
+    end
+  end
+end
+
+--- 运行时切换主题并记住（variant 省略则用该主题登记的变体）
+---@param name string
+---@param variant? string
+function M.set(name, variant)
+  local t = M.themes[name]
+  if not t or not vim.tbl_contains(M.available, name) then
+    vim.notify(("主题 %q 不在 available 里"):format(tostring(name)), vim.log.levels.WARN)
+    return
+  end
+  if variant ~= nil then
+    if not vim.tbl_contains(t.valid, variant) then
+      vim.notify(("%s 没有变体 %q"):format(name, tostring(variant)), vim.log.levels.WARN)
+      return
+    end
+    t.variant = variant
+  end
+  M.active = name
+  vim.fn.mkdir(vim.fn.fnamemodify(M.state, ":h"), "p")
+  vim.fn.writefile({ variant and ("%s %s"):format(name, variant) or name }, M.state)
+  M.load()
+end
+
+--- 清除记忆，回到文件里的默认主题/变体
+function M.reset()
+  vim.fn.delete(M.state)
+  M.active = M.defaults.active
+  for name, variant in pairs(M.defaults.variants) do
+    M.themes[name].variant = variant
+  end
+  M.load()
+end
+
+--- 供 picker 用：四个主题 × 各自合法变体，每条一个候选
+---@return { name: string, variant: string, current: boolean }[]
+function M.items()
+  local out = {}
+  for _, name in ipairs(M.list()) do
+    if vim.tbl_contains(M.available, name) then
+      local t = M.themes[name]
+      for _, variant in ipairs(t.valid) do
+        out[#out + 1] = {
+          name = name,
+          variant = variant,
+          current = M.is(name) and M.variant_of(name) == variant,
+        }
+      end
+    end
+  end
+  return out
+end
+
+--- <leader>uC 的选择器
+function M.pick()
+  Snacks.picker.select(M.items(), {
+    prompt = "主题（选中即记住；重置用 :lua require('config.theme').reset()）",
+    format_item = function(item)
+      return ("%-11s %-10s %s"):format(item.name, item.variant, item.current and "← 当前" or "")
+    end,
+  }, function(item)
+    if item then
+      M.set(item.name, item.variant)
+    end
+  end)
+end
 
 --- 有 spec 块的主题名（字母序，保证每次加载顺序一致）
 ---@return string[]
