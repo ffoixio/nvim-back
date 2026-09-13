@@ -564,13 +564,17 @@ return {
         ["*"] = {
           keys = {
             {
-              "<leader>cr",
+              -- NOTE: 不用 <leader>cr —— 它已被 plugins/lsp.lua 的 vim.lsp.buf.rename 占用
+              -- （同为 LSP 星号键，后装的 lsp.lua 生效），inc-rename 会成死键（实测：29 条里
+              -- 两条同键，先装的被覆盖）。ci 没被占用，留给 inc-rename。
+              "<leader>ci",
               function()
                 local inc_rename = require("inc_rename")
                 return ":" .. inc_rename.config.cmd_name .. " " .. vim.fn.expand("<cword>")
               end,
               expr = true,
               has = "rename",
+              desc = "Rename (inc-rename，边输入边改)",
             },
           },
         },

@@ -55,7 +55,7 @@ mini.ai 在 VeryLazy 会用同一个键覆盖它们，所以**实际生效的是
 | `<leader>bp` | pin / 取消 pin |
 | `<leader>bj` | 用 picker 选 buffer |
 
-### `<leader>c` — code（8）
+### `<leader>c` — code（9）
 
 | 键 | 说明 |
 |---|---|
@@ -65,6 +65,7 @@ mini.ai 在 VeryLazy 会用同一个键覆盖它们，所以**实际生效的是
 | `<leader>cs` | 符号列表（Trouble） |
 | `<leader>cS` | 引用/定义等（Trouble） |
 | `<leader>cm` | 打开 Mason |
+| `<leader>ci` | 重命名（inc-rename，边输入边改；原来挂 `<leader>cr` 上被 LSP 的同名键压住） |
 
 ### `<leader>d` — direnv / profiler（7）
 

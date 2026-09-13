@@ -68,7 +68,7 @@
 | K1 | 配置期重复注册 1095 条记录中，desc 不同的 **0 条** | ✅ 无真覆盖（`<leader>uT` 那类已修） |
 | K2 | 覆盖 nvim 自带映射 17 条（`an/in`、`<C-S>`、`[b/]b`、`[q/]q`、`[d/]d`、`[t/]t`、`[B/]B`、`<C-L>`） | 设计如此；已在 CHEATS §1 补记语义变化 |
 | K3 | LSP 的 `gr` 带 `nowait` 会挡住 nvim 0.11+ 内置的 `grn/gra/grr/gri` | ✅ 已去掉 `nowait` |
-| K4 | LSP 键位被 `plugins/lsp.lua` 与 `plugins/picker.lua` 重复声明 5 个（`gd/gr/gI/gy/<leader>cr`）；其中 `<leader>cr` 两处 desc 不一致 | 记 TODO：同键同名，实际生效者为后注册，`<leader>cr` 建议人工确认一次 |
+| K4 | LSP 键位重复声明 5 个（`gd/gr/gI/gy/<leader>cr`，来自 `lsp.lua` 与 `picker.lua`）。实测合并后 **29 条一条没丢**（lazy 对列表是追加而非按下标覆盖 —— 用 `tbl_deep_extend` 模拟会误判成丢 21 条）。但 `<leader>cr` 两条同时存在：editor.lua 的 inc-rename 先装、lsp.lua 的 `vim.lsp.buf.rename` 后装 → inc-rename 是死键 | OK 已把 inc-rename 挪到 `<leader>ci`（`<leader>cr` 保持 plain rename，行为不变） |
 | K5 | 缓冲局部覆盖全局 4 处：`[a/]a/[A/]A`（treesitter-textobjects 的参数 textobject；全局同名键是 `:previous/:next` 等） | 设计如此（buffer-local 只在有 parser 的缓冲生效） |
 | A1 | 同一 (事件, pattern) 多 handler：`ColorScheme` 13、`FileType` 12（含 2 个匿名）、`CursorMoved` 9、`BufWritePre` 3 | 顺序已核对；"切主题 vs 启动即该主题"的全量高亮 dump 无真实差异 |
 | A2 | 匿名自动命令 18 条，其中 `User TransparencyChanged` 是我们自己写的 | ✅ 已归入 `config_theme` 组 |
