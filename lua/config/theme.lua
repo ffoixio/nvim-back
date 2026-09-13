@@ -5,34 +5,31 @@
 --   themes    —— 每个主题的全部事实：仓库、lazy 插件名、变体字段、允许取值、当前变体、透明选项片段
 --
 -- 换变体：改 M.themes.<主题>.variant 的字符串即可（取值见下面的"变体取值一览"）。
--- 换主题：改 active 一行（六个主题都在 available 里，直接改就行；想"只留一个"，把其余行注释掉）。
+-- 换主题：改 active 一行（四个主题都在 available 里，直接改就行；想"只留一个"，把其余行注释掉）。
 -- 兜底：active/变体写错、主题没装、setup 报错，load() 都会回退到 M.fallback（catppuccin + frappe）。
 
 local M = {}
 
-M.active = "catppuccin"
+-- M.active = "catppuccin"
+M.active = "everforest"
 
--- 六个主题全部登记：这里只表示"允许被 active 选中（并会被 lazy 安装、按需加载）"，
+-- 四个主题全部登记：这里只表示"允许被 active 选中（并会被 lazy 安装、按需加载）"，
 -- 真正用哪个仍然只看上面 active 一行。没登记的主题 lazy 既不安装也不加载。
 M.available = {
   "catppuccin",
   "tokyonight",
   "rose-pine",
-  "nightfox",
-  "gruvbox",
   "everforest",
 }
 
 -- 兜底主题：load() 一旦发现配置有问题、或加载失败就回退到它（它的 spec 永远 enabled）
 M.fallback = { name = "catppuccin", variant = "frappe" }
 
--- 变体取值一览（nightfox 例外：它的变体本身就是 colorscheme 名）：
+-- 变体取值一览：
 --   catppuccin  latte / frappe / macchiato / mocha    （latte 是浅色）
 --   tokyonight  night / storm / day / moon            （day 是浅色）
 --   rose-pine   main / moon / dawn                    （dawn 是浅色）
---   gruvbox     hard / soft / ""                      （深浅看 vim.o.background）
 --   everforest  hard / medium / soft                  （深浅看 vim.o.background）
---   nightfox    nightfox / dayfox / dawnfox / duskfox / nordfox / terafox / carbonfox
 M.themes = {
   catppuccin = {
     repo = "catppuccin/nvim",
@@ -62,26 +59,6 @@ M.themes = {
     variant = "main",
     transparent = function(on)
       return { styles = { transparency = on } }
-    end,
-  },
-  nightfox = {
-    repo = "EdenEast/nightfox.nvim",
-    plugin = "nightfox.nvim",
-    -- 没有 var_field：变体就是 colorscheme 名，由 M.scheme() 取用
-    valid = { "nightfox", "dayfox", "dawnfox", "duskfox", "nordfox", "terafox", "carbonfox" },
-    variant = "duskfox",
-    transparent = function(on)
-      return { options = { transparent = on } }
-    end,
-  },
-  gruvbox = {
-    repo = "ellisonleao/gruvbox.nvim",
-    plugin = "gruvbox.nvim",
-    var_field = "contrast",
-    valid = { "hard", "soft", "" },
-    variant = "hard",
-    transparent = function(on)
-      return { transparent_mode = on }
     end,
   },
   everforest = {
@@ -145,13 +122,11 @@ function M.opts(name)
   return (t and t.var_field) and { [t.var_field] = M.variant_of(name) } or {}
 end
 
---- 主题名 → :colorscheme 用的名字（nightfox 的变体本身就是主题名）
+--- 主题名 → :colorscheme 用的名字。若以后加了"配色名 ≠ 主题名"的主题（nightfox 那种），
+--- 就在这里做映射；目前留下的四个主题两者一致。
 ---@param name string
 ---@return string
 function M.scheme(name)
-  if name == "nightfox" then
-    return M.variant_of(name)
-  end
   return name
 end
 

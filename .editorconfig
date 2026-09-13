@@ -1,0 +1,21 @@
+# 本仓库自己的风格约定。root = true 表示"到此为止"：不会再向上找 ~/.editorconfig，
+# 所以别人 clone / 换机器 / CI 得到的结果都一致，也不受家目录那份改动影响。
+# nvim 原生读它（runtime/lua/editorconfig.lua，不需要插件）；StyLua 在没有 stylua.toml 时也读它。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Lua：Neovim 生态惯例 2 空格。stylua 的内置默认是 TAB + 4，靠这里钉住之后
+# conform 调用的 stylua 才会跟着写 2 空格（实测：没有这一条时它会输出制表符）。
+[*.lua]
+indent_size = 2
+
+# JSON：本仓库只有 lazy-lock.json，lazy 自己写成 2 空格，手动编辑时保持一致
+[*.json]
+indent_size = 2

@@ -8,6 +8,34 @@ local M = setmetatable({}, {
 
 M.formatters = {}
 
+-- 自动格式化的白名单：全局 vim.g.autoformat 留空时，只有命中的缓冲区才会在保存时自动格式化。
+-- 两个表都留空（默认）= 一个都不自动格式化；<leader>uf 仍可强制全局 / 按缓冲区开关。
+--   ft   —— 文件类型，例：{ "lua", "sh", "fish" }
+--   dirs —— 目录前缀（支持 ~），例：{ "~/work/myproject", "~/.config/nvim" }
+M.autoformat = { ft = {}, dirs = {} }
+
+--- 缓冲区是否命中白名单；第二个返回值是命中的规则（:LazyFormatInfo 里显示用）
+---@param buf integer
+---@return boolean, string?
+local function whitelisted(buf)
+  local ft = vim.bo[buf].filetype
+  if vim.tbl_contains(M.autoformat.ft, ft) then
+    return true, "ft:" .. ft
+  end
+  local name = vim.api.nvim_buf_get_name(buf)
+  if name == "" then
+    return false
+  end
+  local path = vim.fs.normalize(vim.fn.fnamemodify(name, ":p"))
+  for _, dir in ipairs(M.autoformat.dirs) do
+    local prefix = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.expand(dir), ":p")) .. "/"
+    if vim.startswith(path, prefix) then
+      return true, "dir:" .. dir
+    end
+  end
+  return false
+end
+
 function M.register(formatter)
   M.formatters[#M.formatters + 1] = formatter
   table.sort(M.formatters, function(a, b)
@@ -38,12 +66,16 @@ end
 
 function M.info(buf)
   buf = buf or vim.api.nvim_get_current_buf()
-  local gaf = vim.g.autoformat == nil or vim.g.autoformat
+  local gaf = vim.g.autoformat
   local baf = vim.b[buf].autoformat
-  local enabled = M.enabled(buf)
+  local enabled, why = M.enabled(buf)
   local lines = {
     "# Status",
-    ("- [%s] global **%s**"):format(gaf and "x" or " ", gaf and "enabled" or "disabled"),
+    ("- [%s] global **%s**"):format(
+      gaf and "x" or " ",
+      gaf == nil and "whitelist" or (gaf and "enabled" or "disabled")
+    ),
+    ("- [%s] whitelist **%s**"):format(why and "x" or " ", why or "no match"),
     ("- [%s] buffer **%s**"):format(
       enabled and "x" or " ",
       baf == nil and "inherit" or baf and "enabled" or "disabled"
@@ -65,14 +97,18 @@ function M.info(buf)
   U[enabled and "info" or "warn"](table.concat(lines, "\n"), { title = "Format (" .. (enabled and "enabled" or "disabled") .. ")" })
 end
 
+-- 三级判定：缓冲区覆盖 > 全局显式值 > 白名单（白名单默认空 = 关）
 function M.enabled(buf)
   buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
-  local gaf = vim.g.autoformat
   local baf = vim.b[buf].autoformat
   if baf ~= nil then
     return baf
   end
-  return gaf == nil or gaf
+  local gaf = vim.g.autoformat
+  if gaf ~= nil then
+    return gaf
+  end
+  return (whitelisted(buf))
 end
 
 function M.toggle(buf)
@@ -135,9 +171,7 @@ function M.snacks_toggle(buf)
   return Snacks.toggle({
     name = "Auto Format (" .. (buf and "Buffer" or "Global") .. ")",
     get = function()
-      if not buf then
-        return vim.g.autoformat == nil or vim.g.autoformat
-      end
+      -- 全局值留空时显示白名单的判定结果，而不是一律显示成"开"
       return M.enabled()
     end,
     set = function(state)

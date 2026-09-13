@@ -1,8 +1,10 @@
 local U = require("util.init")
 local format = require("util.format")
 
--- 保存时自动格式化（配合 util.format）
-vim.g.autoformat = false
+-- 保存时自动格式化（配合 util.format）。这里**故意不设** vim.g.autoformat：
+-- 留空 = 交给 util/format.lua 里的 M.autoformat 白名单决定（两个表默认都是空的，
+-- 也就是"一个都不自动格式化"）。想全局全开用 <leader>uf 的 Global，只影响当前
+-- 缓冲区用它的 Buffer 模式（也可直接在 util/format.lua 里按 ft / 目录填白名单）。
 
 local M = {}
 
