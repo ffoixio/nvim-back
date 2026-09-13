@@ -298,15 +298,20 @@ Snacks.keymap.set({ "n", "x" }, "<localleader>r", function() Snacks.debug.run() 
 
 -- 配置
 map("n", "<leader>R", function()
-  -- 清除配置相关模块缓存后重新加载整个配置（含 lazy 插件 spec）
-  for name, _ in pairs(package.loaded) do
-    if name:match("^config%.") or name:match("^plugins%.") or name:match("^util%.") then
-      package.loaded[name] = nil
+  -- lazy.nvim 不支持原地重新 source 配置：清掉 config/plugins/util 的模块缓存再 dofile(init.lua)
+  -- 会第二次执行 lazy.setup()，lazy 直接报 "Re-sourcing your config is not supported with lazy.nvim"，
+  -- 而且那份配置只加载一半。真正等价于"重载配置"的只有重启进程，所以这里重启：
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.bo[buf].modified then
+      vim.notify("有未保存的缓冲区，先 :wa 再重启", vim.log.levels.WARN, { title = "Config" })
+      return
     end
   end
-  dofile(vim.env.MYVIMRC)
-  vim.notify("配置已重载", vim.log.levels.INFO, { title = "Config" })
-end, { desc = "重载配置" })
+  local argv = { vim.v.progpath }
+  vim.list_extend(argv, vim.fn.argv(-1)) -- 把打开的文件一起带过去
+  vim.fn.jobstart(argv, { detach = true })
+  vim.cmd("qa")
+end, { desc = "重启 Neovim（= 重载配置）" })
 -- 注意：不要用 <leader>en —— 那会让 <leader>e 变成前缀（which-key 显示成组），
 -- 与 LazyVim 的「<leader>e = 资源管理器」不一致。放进 <leader>f 组里。
 map("n", "<leader>fC", "<cmd>edit $MYVIMRC<cr>", { desc = "Edit Config" })

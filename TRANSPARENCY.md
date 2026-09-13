@@ -180,7 +180,7 @@ show("WhichKeyNormal")                 -- 期望仍然是 bg=nil + fg（盖不�
 
 ## 8. 换主题（`config/theme.lua` 里改 `active`）时要注意两件事
 
-1. **透明选项名各主题不同**：`M.themes.<主题>.transparent(on)` 里已经为四个主题各写了一份片段
+1. **透明选项名各主题不同**：`M.themes.<主题>.transparent(on)` 里已经为三个主题各写了一份片段
    （`transparent_background` / `transparent` / `styles.transparency` / `options.transparent` /
    `transparent_mode` / `transparent_background_level`）。换到没实测过的主题时，先确认这一项真的生效。
 2. **`palette()` 目前只认 catppuccin**：它从 `vim.g.colors_name` 的 `catppuccin-XXX` 后缀取 flavour，

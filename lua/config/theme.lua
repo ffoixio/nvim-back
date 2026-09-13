@@ -4,7 +4,8 @@
 --   available —— 哪些主题"装上并可选"；不在这里的主题，lazy 既不会安装也不会加载
 --   themes    —— 每个主题的全部事实：仓库、lazy 插件名、变体字段、允许取值、当前变体、透明选项片段
 --
--- 换变体：改 M.themes.<主题>.variant 的字符串即可（取值见下面的"变体取值一览"）。
+-- 换变体：<leader>uC 里每个主题的变体都能直接选（选中即生效并记住）；也可以改
+--         M.themes.<主题>.variant 当默认值（取值见下面的"变体取值一览"）。
 -- 换主题：<leader>uC（= M.pick()）选一个，会写进状态文件、下次启动沿用，不用改文件也不用提交；
 --         想改的是"默认值"才动下面的 active 一行（状态文件不存在时用它）。
 -- 兜底：active/变体写错、主题没装、setup 报错，load() 都会回退到 M.fallback（catppuccin + frappe）。
@@ -15,29 +16,30 @@ local M = {}
 M.active = "catppuccin"
 -- M.active = "everforest"
 
--- 四个主题全部登记：这里只表示"允许被 active 选中（并会被 lazy 安装、按需加载）"，
--- 真正用哪个仍然只看上面 active 一行。没登记的主题 lazy 既不安装也不加载。
+-- 三个主题全部登记：这里只表示"允许被选中（并会被 lazy 安装、按需加载）"。
+-- 没登记的主题 lazy 既不安装也不加载；真正用哪个由 <leader>uC 的状态文件决定，默认值看上面 active。
 M.available = {
   "catppuccin",
   "tokyonight",
-  "rose-pine",
   "everforest",
 }
 
 -- 兜底主题：load() 一旦发现配置有问题、或加载失败就回退到它（它的 spec 永远 enabled）
 M.fallback = { name = "catppuccin", variant = "frappe" }
 
--- 变体取值一览：
---   catppuccin  latte / frappe / macchiato / mocha    （latte 是浅色）
---   tokyonight  night / storm / day / moon            （day 是浅色）
---   rose-pine   main / moon / dawn                    （dawn 是浅色）
---   everforest  hard / medium / soft                  （深浅看 vim.o.background）
+-- 变体取值一览（只留自己在用的；想加回来把值写进对应主题的 valid 即可）：
+--   catppuccin  frappe / macchiato / mocha
+--   tokyonight  storm
+--   everforest  soft
+M._applied = {} -- 每个主题最近一次真正配下去的变体（供 load() 判断变体是否变了）
+
 M.themes = {
   catppuccin = {
     repo = "catppuccin/nvim",
     plugin = "catppuccin", -- lazy 里的插件名（spec 的 name）
     var_field = "flavour",
-    valid = { "latte", "frappe", "macchiato", "mocha" },
+    module = "catppuccin",
+    valid = { "frappe", "macchiato", "mocha" },
     variant = "frappe",
     transparent = function(on)
       return { transparent_background = on }
@@ -47,32 +49,22 @@ M.themes = {
     repo = "folke/tokyonight.nvim",
     plugin = "tokyonight.nvim",
     var_field = "style",
-    valid = { "night", "storm", "day", "moon" },
+    module = "tokyonight",
+    valid = { "storm" },
     variant = "storm",
     transparent = function(on)
       return { transparent = on }
     end,
   },
-  ["rose-pine"] = {
-    repo = "rose-pine/neovim",
-    plugin = "rose-pine",
-    var_field = "variant",
-    valid = { "main", "moon", "dawn" },
-    variant = "main",
-    transparent = function(on)
-      return { styles = { transparency = on } }
-    end,
-  },
   everforest = {
     repo = "neanias/everforest-nvim",
     plugin = "everforest-nvim",
-    -- 插件目录叫 everforest-nvim，Lua 模块却叫 everforest。lazy 的隐式 setup(opts) 是
-    -- require(main or 插件名).setup(opts)，不写 main 就找不到模块、opts 整个被丢掉（实测：
-    -- 报 "Lua module not found for config"，透明设置没生效、Normal 还是实底）。
-    main = "everforest",
+    -- module = Lua 模块名（插件目录叫 everforest-nvim，模块叫 everforest）。它同时充当
+    -- lazy 隐式 setup 用的 spec.main，以及运行时补 setup() 时 require 的名字。
+    module = "everforest",
     var_field = "background",
-    valid = { "hard", "medium", "soft" },
-    variant = "medium",
+    valid = { "soft" },
+    variant = "soft",
     transparent = function(on)
       return { transparent_background_level = on and 2 or 0 }
     end,
@@ -154,7 +146,7 @@ function M.reset()
   M.load()
 end
 
---- 供 picker 用：四个主题 × 各自合法变体，每条一个候选
+--- 供 picker 用：三个主题 × 各自合法变体，每条一个候选
 ---@return { name: string, variant: string, current: boolean }[]
 function M.items()
   local out = {}
@@ -229,11 +221,17 @@ end
 ---@return table
 function M.opts(name)
   local t = M.themes[name]
-  return (t and t.var_field) and { [t.var_field] = M.variant_of(name) } or {}
+  if not (t and t.var_field) then
+    return {}
+  end
+  local variant = M.variant_of(name)
+  -- 记下"当前已经交给 spec / setup 过的变体"，load() 靠它判断要不要补 setup（见那里的注释）
+  M._applied[name] = variant
+  return { [t.var_field] = variant }
 end
 
 --- 主题名 → :colorscheme 用的名字。若以后加了"配色名 ≠ 主题名"的主题（nightfox 那种），
---- 就在这里做映射；目前留下的四个主题两者一致。
+--- 就在这里做映射；目前留下的三个主题两者一致。
 ---@param name string
 ---@return string
 function M.scheme(name)
@@ -273,6 +271,18 @@ function M.load()
   --    变体和透明都会不生效 —— 实测）；② 再 :colorscheme，失败会抛 E185，pcall 接住。
   local function try(theme_name, scheme)
     pcall(require("lazy").load, { plugins = { M.themes[theme_name].plugin } })
+    -- 变体（flavour / style / background）是启动时算进 spec opts 的，运行中改 variant 不会自动
+    -- 生效 —— 实测切 frappe -> mocha 颜色不变。各主题的 setup 都是深合并，补一次只传变体不会
+    -- 丢掉其它已设选项。但**必须只在变体真的变了时补**：启动时 lazy 已经拿完整 opts 配过一遍，
+    -- 再 setup 一次会打乱编译好的配色（实测有底色的组数 123 -> 108、启动 27ms -> 42ms）。
+    local t = M.themes[theme_name]
+    local variant = M.variant_of(theme_name)
+    if M._applied[theme_name] ~= variant then
+      local ok, mod = pcall(require, t.module)
+      if ok and type(mod) == "table" and type(mod.setup) == "function" then
+        pcall(mod.setup, M.opts(theme_name))
+      end
+    end
     return (pcall(vim.cmd.colorscheme, scheme))
   end
 

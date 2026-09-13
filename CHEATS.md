@@ -212,7 +212,7 @@ mini.ai 在 VeryLazy 会用同一个键覆盖它们，所以**实际生效的是
 | `<leader>|` / `<leader>-` | 右分屏 / 下分屏 |
 | `<leader>D` | DBUI 开关（数据库） |
 | `<leader>K` | `'keywordprg'`（当前词查 man；Lua 里会报错，见下） |
-| `<leader>R` | 重载配置 |
+| `<leader>R` | 重启 Neovim（= 重载配置；lazy.nvim 不支持原地重载，有未保存缓冲区时会先提示） |
 | `<leader>T` | Vim 教程（中文） |
 | `<leader>?` | 当前缓冲区的键位 |
 | `<leader><Tab>…` | 页签子菜单：`<Tab><Tab>` 新建 / `[` `]` 上/下一个 / `d` 关闭 / `f` `l` 首/末 / `o` 关闭其它 |

@@ -144,8 +144,8 @@ local specs = {
     return {
       t.repo,
       name = t.plugin,
-      -- 模块名和插件名不一致时（everforest），告诉 lazy 的隐式 setup 该 require 哪个模块
-      main = t.main,
+      -- 告诉 lazy 的隐式 setup 该 require 哪个模块（主题表里的 module 字段）
+      main = t.module,
       enabled = T.enabled(name),
       lazy = not T.is(name),
       priority = 1000,

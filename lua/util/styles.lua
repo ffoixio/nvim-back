@@ -4,7 +4,7 @@
 --   catppuccin  注释 + 条件语句，另外 @module / @namespace / @tag.attribute 等零散组也斜
 --   tokyonight  注释 + 关键字
 --   everforest  只有注释
---   rose-pine   styles.italic 一个总开关
+--   rose-pine   styles.italic 一个总开关（已从本配置删除，仅作对比）
 --   gruvbox     注释 + 字符串 + 折叠（已从本配置删除，仅作对比）
 -- 于是"换主题"看起来像"换字体"。
 --
