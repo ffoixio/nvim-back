@@ -127,9 +127,28 @@ local specs = {
         "akinsho/bufferline.nvim",
         optional = true,
         opts = function(_, o)
-          if (vim.g.colors_name or ""):find("catppuccin") then
-            o.highlights = require("catppuccin.special.bufferline").get_theme()
+          -- bufferline 的高亮是 setup 时按"当前配色"算一次，切主题不会自己重算
+          -- （实测：catppuccin -> everforest 后 49 个 BufferLine 组仍是 catppuccin 的颜色）。
+          -- 这里记下完整 opts，换主题时重算一遍。
+          local function set_highlights(t)
+            if (vim.g.colors_name or ""):find("catppuccin") then
+              t.highlights = require("catppuccin.special.bufferline").get_theme()
+            else
+              t.highlights = nil -- 交回 bufferline 自己的默认（按当前配色生成）
+            end
           end
+          set_highlights(o)
+          vim.api.nvim_create_autocmd("ColorScheme", {
+            group = vim.api.nvim_create_augroup("config_bufferline_colors", { clear = true }),
+            callback = function()
+              if not package.loaded["bufferline"] then
+                return
+              end
+              local opts = vim.deepcopy(o)
+              set_highlights(opts)
+              require("bufferline").setup(opts)
+            end,
+          })
         end,
       },
     },

@@ -18,8 +18,11 @@ whenToUse: 用户报告 which-key / picker / lazy / 上下文粘行 / scratch / 
   - `M.follow` = `{组名, 字段, 透明时的值, 不透明时的值}`（跟着透明状态走）
   - `M.always_opaque` = `{组名, 字段, 值}`（透明模式下仍强制实底的**例外**，默认空表；
     普通浮窗一律走 `M.follow` —— 所有浮窗底色都来自 `NormalFloat` / `Pmenu` 两个根）
-  - 值只写 catppuccin 调色板键名（`base`/`mantle`/`surface0`…）或 `"NONE"`
-- 两个入口读同一张表：编译期 `lua/plugins/colorscheme.lua` 的 `custom_highlights`；运行时 `M.apply`（`<leader>uT` 走 `M.set`，并写状态文件）。
+  - 值只写 catppuccin 调色板键名（`base`/`mantle`/`surface0`…）或 `"NONE"`；这两列只给**编译期**用，
+    运行时（`M.apply`）改成快照式：`ColorScheme` 后抓一遍各组原值当「不透明值」，透明时写 `NONE`，
+    所以运行时与主题无关（修之前它会拿 catppuccin 调色板去刷别的主题）
+- 两个入口读同一张表：编译期 `lua/plugins/colorscheme.lua` 的 `custom_highlights`；运行时 `M.apply`（`<leader>uT` 走 `M.set`：写状态文件 → 应用 → 发 `User TransparencyChanged` → `config/theme.lua` 重配主题）。
+- 切主题：`ColorScheme` 钩子里先 `M.snapshot()` 再 `M.apply(M.enabled())`；bufferline 的高亮也在同一个钩子里按新配色重算（否则标签栏会留着旧主题的颜色）。
 - 状态文件：`stdpath("state")/transparent_background`（`true`/`false`），`M.default()` 读它。
 
 ## 最容易栽的坑（务必先查这条）

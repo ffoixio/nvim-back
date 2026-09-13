@@ -27,7 +27,9 @@ Neovim 只能做两件事之一：**画背景**，或者**完全不画**（`bg =
 - `M.always_opaque`：**透明模式下仍强制实底**的例外，格式 `{组名, 字段, 值}`；**默认为空**。
   早期版本把 picker / lazy / 通知这些都钉在这里，结果是"遇到一个浮窗补一条"；现在它们统一走 `M.follow`
   （所有浮窗底色都来自 `NormalFloat` / `Pmenu` 两个根），只有确实看不清的才加回这张表一行。
-- 值只写两种：**catppuccin 调色板键名**（`base`/`mantle`/`surface0`…）或 `"NONE"`
+- 值只写两种：**catppuccin 调色板键名**（`base`/`mantle`/`surface0`…）或 `"NONE"`。
+  这两列只给**编译期**（catppuccin 的 `custom_highlights`）用；运行时的开关 / 换主题走下面的快照机制，
+  所以这张表本身与主题无关。
 
 两个消费者读同一张表：
 
@@ -178,18 +180,22 @@ show("WhichKeyNormal")                 -- 期望仍然是 bg=nil + fg（盖不�
 | `lua/config/keymaps.lua` | `<leader>uT` 开关（Snacks.toggle，调 `util.transparency`） |
 | `~/.local/state/nvim/transparent_background` | 记住的开关状态（`true`/`false`） |
 
-## 8. 换主题（`config/theme.lua` 里改 `active`）时要注意两件事
+## 8. 换主题（`<leader>uC`；默认值在 `config/theme.lua` 的 `active`）时要注意两件事
 
 1. **透明选项名各主题不同**：`M.themes.<主题>.transparent(on)` 里已经为三个主题各写了一份片段
    （`transparent_background` / `transparent` / `styles.transparency` / `options.transparent` /
    `transparent_mode` / `transparent_background_level`）。换到没实测过的主题时，先确认这一项真的生效。
-2. **`palette()` 目前只认 catppuccin**：它从 `vim.g.colors_name` 的 `catppuccin-XXX` 后缀取 flavour，
-   换别的主题会**静默拿到 frappe 的调色板** —— 开着透明时无所谓（值都是 `NONE`），但关掉透明后
-   面板底色会是 frappe 的灰，而不是当前主题的。真要长期用别的主题，就给 `palette()` 加分支
-   （tokyonight 是 `require("tokyonight.colors").setup()`），见 `TODO.md`。
+2. ~~`palette()` 只认 catppuccin~~ **已修**：运行时不再用 catppuccin 调色板，改成**快照式** ——
+   在配色刚生效、还没被我们改过时，把 `M.follow` 里各组的原值抓下来当「不透明值」，透明时写 `NONE`。
+   于是换任何主题都不会再拿 catppuccin 的颜色去刷别人的界面（修之前实测 everforest 下
+   `NormalFloat.fg` 被刷成 catppuccin 的 `#c6d0f5`）。
+   配套两个钩子：`ColorScheme` → 抓新主题的快照再按当前状态重刷（这就是「切主题也全部生效」）；
+   `User TransparencyChanged`（`M.set` 触发）→ 让 `config/theme.lua` 按新的透明状态重配主题，
+   否则「关掉透明」时那些组没有实底颜色可恢复（实测 `Normal.bg` 会一直是 nil）。
 
 ## 9. 保持不变成屎山的三条约束
 
 1. **只有一张表**：所有透明相关的高亮组都在 `M.follow` / `M.always_opaque`，不要在各处写特判；
-2. **两个入口读同一张表**：编译期（`custom_highlights`）与运行时（`M.apply`），不许各写一份；
+2. **两个入口读同一张表**：编译期（`custom_highlights`）与运行时（`M.apply`）都遍历 `M.follow`，
+   不许各写一份（取值方式不同：编译期用调色板键名，运行时用快照）；
 3. **每条都有 NOTE**：说明它是谁、为什么这么处理，否则下次没人（包括 AI）能判断该不该动。

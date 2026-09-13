@@ -136,6 +136,14 @@ function M.set(name, variant)
   M.load()
 end
 
+-- 透明开关变化时重配当前主题（M.load 里会带着新的 transparent 选项重新 setup + :colorscheme）
+vim.api.nvim_create_autocmd("User", {
+  pattern = "TransparencyChanged",
+  callback = function()
+    M.load()
+  end,
+})
+
 --- 清除记忆，回到文件里的默认主题/变体
 function M.reset()
   vim.fn.delete(M.state)
@@ -225,8 +233,10 @@ function M.opts(name)
     return {}
   end
   local variant = M.variant_of(name)
-  -- 记下"当前已经交给 spec / setup 过的变体"，load() 靠它判断要不要补 setup（见那里的注释）
-  M._applied[name] = variant
+  -- 记下"当前已经交给 spec / setup 过的配置"，load() 靠它判断要不要补 setup（见那里的注释）。
+  -- 键里带上透明状态：透明同样是主题自己的选项（M.themes.<主题>.transparent(on)），
+  -- 光改变体不够 —— 关掉透明时要让主题重新配一遍，否则那些组没有可恢复的实底颜色。
+  M._applied[name] = variant .. "|" .. tostring(require("util.transparency").default())
   return { [t.var_field] = variant }
 end
 
@@ -276,11 +286,12 @@ function M.load()
     -- 丢掉其它已设选项。但**必须只在变体真的变了时补**：启动时 lazy 已经拿完整 opts 配过一遍，
     -- 再 setup 一次会打乱编译好的配色（实测有底色的组数 123 -> 108、启动 27ms -> 42ms）。
     local t = M.themes[theme_name]
-    local variant = M.variant_of(theme_name)
-    if M._applied[theme_name] ~= variant then
+    local on = require("util.transparency").default()
+    if M._applied[theme_name] ~= (M.variant_of(theme_name) .. "|" .. tostring(on)) then
       local ok, mod = pcall(require, t.module)
       if ok and type(mod) == "table" and type(mod.setup) == "function" then
-        pcall(mod.setup, M.opts(theme_name))
+        -- 变体 + 该主题自己的透明选项一起给（M.opts 内部会把新状态记进 _applied）
+        pcall(mod.setup, vim.tbl_deep_extend("force", M.opts(theme_name), t.transparent(on)))
       end
     end
     return (pcall(vim.cmd.colorscheme, scheme))

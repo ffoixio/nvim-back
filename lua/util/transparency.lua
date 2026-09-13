@@ -3,7 +3,8 @@
 -- 为什么要总表：透明/不透明两种状态要动的高亮组不止一个，而用到它们的地方有两处
 -- （配色编译时的 custom_highlights、运行时的开关）。两边都从这里读，新增组只改这一处。
 --
--- NOTE: 值写 catppuccin 调色板键名（base / mantle / surface0 …），或 "NONE" 表示不画背景。
+-- NOTE: 表里的值写 catppuccin 调色板键名（base / mantle / surface0 …）或 "NONE"，供**编译期**
+-- （catppuccin 的 custom_highlights）使用；运行时的开关/换主题走下面的快照机制，因而与主题无关。
 local M = {}
 
 -- 跟着透明状态走：{组名, 字段, 透明时的值, 不透明时的值}
@@ -137,31 +138,69 @@ local function set_field(group, field, value)
   vim.api.nvim_set_hl(0, group, h --[[@as vim.api.keyset.highlight]])
 end
 
+-- 运行时（开关 / VeryLazy / 换主题）用快照，而不是 catppuccin 的调色板：
+-- 旧实现只会 require("catppuccin.palettes")，换到别的主题时会拿 catppuccin 的颜色去刷别人的界面
+-- （实测 everforest 下 NormalFloat.fg 被刷成 catppuccin 的 #c6d0f5、浮窗还留着两块底色）。
+-- 现在：不透明值 = 主题自己给的值（快照），透明值 = bg 置 NONE、fg 显式写回主题的值
+-- （显式写是为了不被 default = true 的 link 盖回去）。
+local snapshot = {}
+
+--- 抓一次快照：在"配色刚生效、还没被我们改过"时调用（ColorScheme 回调里就是这么用的）
+function M.snapshot()
+  snapshot = {}
+  for _, item in ipairs(M.follow) do
+    local group, field = item[1], item[2]
+    snapshot[group] = snapshot[group] or {}
+    local v = vim.api.nvim_get_hl(0, { name = group, link = false })[field]
+    if v ~= nil then
+      snapshot[group][field] = v
+    end
+  end
+end
+
 --- 应用某个状态（不写状态文件）
 ---@param on boolean
 function M.apply(on)
-  local p = palette()
-  if not p then
-    vim.notify("透明开关目前只支持 catppuccin 配色", vim.log.levels.WARN)
-    return
-  end
   for _, item in ipairs(M.follow) do
-    local v = on and item[3] or item[4]
-    set_field(item[1], item[2], v == "NONE" and "NONE" or p[v])
+    local group, field = item[1], item[2]
+    snapshot[group] = snapshot[group] or {}
+    local cur = vim.api.nvim_get_hl(0, { name = group, link = false })[field]
+    if on then
+      if cur ~= nil and snapshot[group][field] == nil then
+        snapshot[group][field] = cur
+      end
+      set_field(group, field, field == "bg" and "NONE" or (cur or snapshot[group][field] or "NONE"))
+    elseif snapshot[group][field] ~= nil then
+      set_field(group, field, snapshot[group][field])
+    end
   end
   if on then
+    local p = palette()
     for _, item in ipairs(M.always_opaque) do
-      set_field(item[1], item[2], p[item[3]])
+      set_field(item[1], item[2], (p and p[item[3]]) or item[3])
     end
   end
 end
 
 --- 打开/关闭背景透明，并把状态写进状态文件（下次启动沿用）
+--- NOTE: 透明同时也是**各主题自己的选项**（config/theme.lua 里的 M.themes.<主题>.transparent(on)），
+--- 所以状态文件写完要通知主题重配一遍：否则"关掉透明"时那些组没有实底颜色可恢复（实测 Normal.bg
+--- 仍是 nil）。用事件解耦，免得这里直接依赖 config.theme。
 ---@param on boolean
 function M.set(on)
-  M.apply(on)
   vim.fn.writefile({ tostring(on) }, STATE)
+  M.apply(on)
+  vim.api.nvim_exec_autocmds("User", { pattern = "TransparencyChanged", modeline = false })
 end
+
+-- 换主题时：先抓新主题的快照，再按当前透明状态重刷一遍 —— 这是"切主题也全部生效"的关键。
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("config_transparency", { clear = true }),
+  callback = function()
+    M.snapshot()
+    M.apply(M.enabled())
+  end,
+})
 
 -- NOTE: which-key 这类插件会在配色之后用 nvim_set_hl(..., { link = ..., default = true }) 建自己的组；
 -- 而 default = true 会把"只设了 bg = NONE"的组当成未定义直接盖掉（实测如此），浮层就又变回实底。
