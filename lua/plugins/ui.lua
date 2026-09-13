@@ -394,19 +394,17 @@ return {
         end,
       })
 
-      -- schedule setting the mapping to override the default mapping from `keymaps.lua`
-      -- seems `keymaps.lua` is the last event to execute on `VeryLazy` and it overwrites it
-      vim.schedule(function()
-        Snacks.toggle({
-          name = "Mini Animate",
-          get = function()
-            return not vim.g.minianimate_disable
-          end,
-          set = function(state)
-            vim.g.minianimate_disable = not state
-          end,
-        }):map("<leader>ua")
-      end)
+      -- <leader>ua = mini.animate 的开关；snacks 自己的动画开关在 keymaps.lua 里，占 <leader>uA。
+      -- （原先这里要 vim.schedule 抢注册顺序，是因为 keymaps.lua 也映射了 ua；那边已让开，不再需要）
+      Snacks.toggle({
+        name = "Mini Animate",
+        get = function()
+          return not vim.g.minianimate_disable
+        end,
+        set = function(state)
+          vim.g.minianimate_disable = not state
+        end,
+      }):map("<leader>ua")
 
       local animate = require("mini.animate")
       return vim.tbl_deep_extend("force", opts, {

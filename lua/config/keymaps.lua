@@ -220,13 +220,25 @@ Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leade
 Snacks.toggle.diagnostics():map("<leader>ud")
 Snacks.toggle.line_number():map("<leader>ul")
 Snacks.toggle.option("conceallevel", { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
-Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" }):map("<leader>uA")
+Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" }):map("<leader>uB") -- NOTE: 原 uA，让位给下面的 Snacks Animate（B = tab Bar）
 Snacks.toggle.treesitter():map("<leader>uH") -- NOTE: 原先是 uT，与透明开关（vim.schedule 里注册更晚）撞键被顶掉
 Snacks.toggle.option("background", { off = "light", on = "dark" , name = "Dark Background" }):map("<leader>ub")
 Snacks.toggle.dim():map("<leader>uD")
--- NOTE: <leader>ua 归 plugins/ui.lua 里那个自定义的 "Mini Animate" 开关（它管 mini.animate，
--- 注册更晚、本来就赢）。原来这里还挂过 Snacks.toggle.animate()（管的是 snacks 自己的动画，
--- 两个是不同系统），同一个键注册两遍没有意义，删掉。
+-- snacks 自己的动画总开关（vim.g.snacks_animate，管 snacks 浮窗/输入框那些动画）。它和
+-- mini.animate 是两套独立系统，所以两个开关并存、各占一个键：
+--   <leader>ua = Mini Animate（mini.animate，开关在 plugins/ui.lua 里）
+--   <leader>uA = Snacks Animate（下面这个。内置的 Snacks.toggle.animate() 名字叫 "Animations"，
+--               这里用同一个 id 重建一份，只把名字改明确）
+Snacks.toggle({
+  id = "animate",
+  name = "Snacks Animate",
+  get = function()
+    return vim.g.snacks_animate ~= false
+  end,
+  set = function(state)
+    vim.g.snacks_animate = state
+  end,
+}):map("<leader>uA")
 Snacks.toggle.indent():map("<leader>ug")
 Snacks.toggle.scroll():map("<leader>uS")
 Snacks.toggle.profiler():map("<leader>dpp")

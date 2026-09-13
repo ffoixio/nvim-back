@@ -1,6 +1,6 @@
 # 快捷键手册（CHEATS）
 
-> 数据来自**运行时 dump**（`nvim_get_keymap` 各模式，VeryLazy 之后），共 468 条，本文做了人工归类与筛选。
+> 数据来自**运行时 dump**（`nvim_get_keymap` 各模式，VeryLazy 之后），共 466 条，本文做了人工归类与筛选。
 > 重新生成的方法见文末 §5。
 
 ## 0. 怎么用这份表 & 怎么自己查
@@ -27,6 +27,13 @@
 | `<C-Space>` | Treesitter 增量选择 | `n` `x` `o` |
 
 其余为 Neovim 原生，完整清单见 `:h quickref`。
+
+**关于 `an` / `in`（`x` `o` 模式）**：这两个键 nvim 0.12 **核心自带**（`vim/_core/defaults.lua`），
+语义是"按语法节点逐级扩选/回缩"，没有语法树时退回 `vim.lsp.buf.selection_range`（LSP 选择范围兜底）。
+mini.ai 在 VeryLazy 会用同一个键覆盖它们，所以**实际生效的是 mini.ai 那套**（"下一个/上一个文本对象的
+外面/里面"）—— 两者键位相同、语义不同，被覆盖是预期内的，不需要处理。
+核心那套并没有消失：可视模式的 `[n` / `]n`（上/下一个节点）、`[N` / `]N`（上/下一个兄弟节点）
+没有冲突，照样可用；另外 `<C-Space>`（flash）做的是增量选择，和它们互补。
 
 ## 2. `<leader>` 命名空间（与 which-key 的组一一对应）
 
@@ -147,12 +154,14 @@
 | `<leader>sn…` | noice 子菜单：`sna` 全部 / `snh` 历史 / `snl` 最后一条 / `snd` 清空 / `snt` picker |
 | `<leader>sR` | 恢复上一次搜索 |
 
-### `<leader>u` — ui（24）
+### `<leader>u` — ui（26）
 
 | 键 | 说明 |
 |---|---|
 | `<leader>uT` | 透明背景（会记住状态） |
-| `<leader>ua` | Mini Animate |
+| `<leader>ua` | Mini Animate（mini.animate 的动画） |
+| `<leader>uA` | Snacks Animate（snacks 自己的动画开关，`vim.g.snacks_animate`） |
+| `<leader>uH` | Treesitter 高亮开关 |
 | `<leader>uC` | 切配色 |
 | `<leader>uF` / `<leader>uf` | 自动格式化（当前 buffer / 全局） |
 | `<leader>ud` | 诊断显示 |
@@ -165,7 +174,7 @@
 | `<leader>uS` | 平滑滚动（smoothscroll） |
 | `<leader>ub` | 深色/浅色背景 |
 | `<leader>uD` | dim 非活动窗口 |
-| `<leader>uA` | tabline |
+| `<leader>uB` | tabline（B = tab Bar；原在 `uA`） |
 | `<leader>uZ` / `<leader>uz` | Zoom / Zen 模式 |
 | `<leader>ui` / `<leader>uI` | Inspect pos / tree |
 | `<leader>un` | 清空通知 |
@@ -244,10 +253,12 @@
 nvim -u init.lua --headless -i NONE \
   -c 'lua vim.wait(1200)' \
   -c 'lua vim.api.nvim_exec_autocmds("User", { pattern = "VeryLazy", modeline = false })' \
-  -c 'lua vim.wait(500)' \
+  -c 'lua vim.wait(2500)' \
   -c 'lua local o={} for _,m in ipairs({"n","i","x","s","o","t","c"}) do for _,k in ipairs(vim.api.nvim_get_keymap(m)) do o[#o+1]=("%s\\t%s\\t%s\\t%s"):format(m,k.lhs,(k.rhs or ""):gsub("[\\r\\n]"," "),(k.desc or "")) end end vim.fn.writefile(o, "/tmp/maps.tsv")' \
   -c 'qa!'
 # 2) 再按 §2 的分组（<leader> + 首字母）与 which-key 的组名整理成 md
+# 注：VeryLazy 之后还有 toggle 是"插件加载时才注册"的（如 mini.animate、bufferline），
+#     等待时间给到 2500ms 才不会漏；500ms 会少十几个键。
 ```
 
 > 组名不在这份 dump 里（which-key 自己维护树），要改组名去配置里搜 `group = "…"`。
