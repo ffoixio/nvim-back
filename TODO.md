@@ -3,7 +3,11 @@
 > 只记“想改但先不动”的事。代码里的待办写成 `TODO` 加冒号的注释，放在对应域的文件里；
 > `:TodoQuickFix`（或 `<leader>st`）能一次列出所有 TODO / FIXME / HACK / NOTE。
 
-## 状态栏：换成 Neovim 原生 statusline，去掉 lualine
+## 状态栏：换成 Neovim 原生 statusline，去掉 lualine —— **已完成（v1，2026-09-13）**
+
+> 实施计划与实测证据在 [STATUSLINE.md](./STATUSLINE.md)；代码在 `lua/util/statusline.lua`，接线在
+> `config/options.lua`（`opt.statusline`）与 `config/lazy.lua`（`setup()`）。
+> 下面这张表是最初调研时列的清单，留作参考（lualine 已从配置和 `lazy-lock.json` 里删掉）。
 
 **代码位置**：`lua/plugins/ui.lua`（lualine 规格上方有对应的 TODO 注释）
 

@@ -7,6 +7,7 @@
 --   5. 模块登记（config/modules.lua 与 plugins/ 下实际文件是否对得上）
 --   6. 各语言就绪度（LSP / treesitter / 格式化 / lint；数据来自各语言模块自己的 register_lang）
 --   7. mason 已装包一览
+--   8. 状态栏（原生 statusline：接线 / 渲染 / SL* 组的底色）
 -- 注：第 4 节的数据由各语言模块自己登记（plugins/lang/*.lua 里的 register_lang），这里不再维护副本。
 
 local M = {}
@@ -219,6 +220,38 @@ function M.check()
     h.ok("没有覆盖 nvim 自带映射")
   else
     h.info(("覆盖了 nvim 自带映射 %d 条：%s"):format(#rep.overwritten, fmt(rep.overwritten)))
+  end
+
+  h.start("config: 状态栏")
+  -- 原生实现见 util/statusline.lua。这里只查「接线还在不在、渲染还活着吗、组有没有被写死底色」；
+  -- 每一项具体显示什么，由 .test/probe/statusline_cases.lua 的场景矩阵覆盖。
+  local S = require("util.statusline")
+  if vim.o.statusline == S.expression then
+    h.ok("opt.statusline 指向本模块")
+  else
+    h.warn(("opt.statusline 不是本模块的表达式，当前是 %q（本模块的表达式见 util/statusline.lua 的 M.expression）"):format(vim.o.statusline))
+  end
+  local ok, ret = pcall(vim.api.nvim_eval_statusline, vim.o.statusline, {})
+  if ok and type(ret) == "table" and type(ret.str) == "string" then
+    h.ok(("渲染正常（%d 列）：%s"):format(ret.width, vim.trim(ret.str)))
+  else
+    h.error("渲染失败：" .. tostring(ret))
+  end
+  -- 强调组只应写 fg：底色必须留给 StatusLine（它在 transparency 的 M.follow 里），否则透明模式下
+  -- 状态栏里会留下几块实底。写死 bg 的组在这里点名。
+  local with_bg = {}
+  for _, name in ipairs(vim.fn.getcompletion("SL", "highlight")) do
+    if vim.api.nvim_get_hl(0, { name = name, link = false }).bg ~= nil then
+      with_bg[#with_bg + 1] = name
+    end
+  end
+  if #with_bg == 0 then
+    h.ok("SL* 组都只写 fg（底色跟随 StatusLine，透明开关不需要特判）")
+  else
+    h.warn("这些 SL* 组写死了底色，透明模式下会是实底：" .. table.concat(with_bg, " "))
+  end
+  if S.disabled[vim.bo.filetype] then
+    h.info(("当前 filetype=%s 在禁用列表里，渲染结果为空串（%q）"):format(vim.bo.filetype, S.render()))
   end
 
   h.start("config: 插件规格结构")
