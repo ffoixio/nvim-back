@@ -28,7 +28,7 @@ opt.relativenumber = true -- 相对行号，配合 <n>j/k 跳转（默认 false�
 opt.cursorline = true -- 高亮当前行（默认 false）
 -- 第 120 列参考线：先关掉（2026-09-13）。
 --   理由：nvim 的 colorcolumn 只能用**背景色**画实底，它是这套透明界面里唯一一根不透明竖条；
---   而列号在 lualine 的 location 组件里已经常显（这也是 opt.ruler = false 的理由），
+--   而列号在状态栏的 location 项里已经常显（这也是 opt.ruler = false 的理由），
 --   实际也很少越线（仓库 8040 行里只有 68 行 >120 列）。
 --   想开回来：:set cc=120（临时），或把这行取消注释。
 -- opt.colorcolumn = "120"
@@ -101,6 +101,8 @@ opt.grepformat = "%f:%l:%c:%m" -- rg 输出解析格式
 opt.formatoptions = "jcroqlnt" -- 自动注释/格式化行为
 opt.formatexpr = "v:lua.require('util.format').formatexpr()" -- gq 格式化走 conform
 opt.statuscolumn = [[%!v:lua.require('util.statuscolumn').get()]] -- 状态列（行号/诊断/折叠，走 snacks）
+-- 状态栏：原生实现（渲染函数在 util/statusline.lua；观感=扁平，强调组只写 fg，底色继承 StatusLine）
+opt.statusline = [[%!v:lua.require('util.statusline').render()]]
 
 -- markdown 缩进修复（默认会错误缩进）
 vim.g.markdown_recommended_style = 0

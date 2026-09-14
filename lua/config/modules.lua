@@ -50,7 +50,7 @@ M.feature = {
   picker = true, -- snacks picker 的各项 picker
   shell = true, -- bash / zsh（LSP、lint、解析器）
   treesitter = true,
-  ui = true, -- bufferline / lualine / 状态栏 / 各种 UI
+  ui = true, -- bufferline / 原生状态栏 / 各种 UI
   util = true, -- 杂项小工具插件
 }
 

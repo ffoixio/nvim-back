@@ -49,7 +49,7 @@ local specs = {
         lsp_trouble = true,
         mason = true,
         mini = true,
-        navic = { enabled = true, custom_bg = "lualine" },
+        navic = { enabled = true, custom_bg = "NONE" }, -- 状态栏改原生后没有 lualine 底色了，让 navic 跟随 StatusLine
         neotest = true,
         neotree = true,
         noice = true,

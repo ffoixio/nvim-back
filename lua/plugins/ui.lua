@@ -1,10 +1,6 @@
-local U = require("util.init")
-local lualine_util = require("util.lualine")
 
 -- snacks 动画开关
 vim.g.snacks_animate = true
--- lualine 显示代码位置：用 navic（面包屑）而不是 Trouble symbols，避免两者重复
-vim.g.trouble_lualine = false
 
 -- animations
 
@@ -70,136 +66,6 @@ return {
           end)
         end,
       })
-    end,
-  },
-
-  -- Displays a fancy status line with git status,
-  -- LSP diagnostics, filetype information, and more.
-  {
-  -- TODO: 用 Neovim 原生 statusline 替换 lualine（方向：以后直接用原生 API，不再依赖插件）。
-  --   要迁移的信息项：mode / branch / 项目根目录 / 诊断 / filetype / 路径 / navic 面包屑 /
-  --   lazy 更新数 / diff / 进度 / 行:列 / 时钟。做法、已验证的渲染样例和坑见仓库根目录的待办文档。
-    "nvim-lualine/lualine.nvim",
-    event = "VeryLazy",
-    init = function()
-      vim.g.lualine_laststatus = vim.o.laststatus
-      if vim.fn.argc(-1) > 0 then
-        -- set an empty statusline till lualine loads
-        vim.o.statusline = " "
-      else
-        -- hide the statusline on the starter page
-        vim.o.laststatus = 0
-      end
-    end,
-    opts = function()
-      -- PERF: we don't need this lualine require madness 🤷
-      local lualine_require = require("lualine_require")
-      lualine_require.require = require
-
-      local icons = require("config.icons").icons
-
-      vim.o.laststatus = vim.g.lualine_laststatus
-
-      local opts = {
-        options = {
-          theme = "auto",
-          globalstatus = vim.o.laststatus == 3,
-          disabled_filetypes = { statusline = { "dashboard", "alpha", "ministarter", "snacks_dashboard" } },
-        },
-        sections = {
-          lualine_a = { "mode" },
-          lualine_b = { "branch" },
-
-          lualine_c = {
-            lualine_util.root_dir(),
-            {
-              "diagnostics",
-              symbols = {
-                error = icons.diagnostics.Error,
-                warn = icons.diagnostics.Warn,
-                info = icons.diagnostics.Info,
-                hint = icons.diagnostics.Hint,
-              },
-            },
-            { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
-            { lualine_util.pretty_path() },
-          },
-          lualine_x = {
-            Snacks.profiler.status(),
-            -- stylua: ignore
-            {
-              function() return require("noice").api.status.command.get() end,
-              cond = function() return package.loaded["noice"] and require("noice").api.status.command.has() end,
-              color = function() return { fg = Snacks.util.color("Statement") } end,
-            },
-            -- stylua: ignore
-            {
-              function() return require("noice").api.status.mode.get() end,
-              cond = function() return package.loaded["noice"] and require("noice").api.status.mode.has() end,
-              color = function() return { fg = Snacks.util.color("Constant") } end,
-            },
-            -- stylua: ignore
-            {
-              require("lazy.status").updates,
-              cond = require("lazy.status").has_updates,
-              color = function() return { fg = Snacks.util.color("Special") } end,
-            },
-            {
-              "diff",
-              symbols = {
-                added = icons.git.added,
-                modified = icons.git.modified,
-                removed = icons.git.removed,
-              },
-              source = function()
-                local gitsigns = vim.b.gitsigns_status_dict
-                if gitsigns then
-                  return {
-                    added = gitsigns.added,
-                    modified = gitsigns.changed,
-                    removed = gitsigns.removed,
-                  }
-                end
-              end,
-            },
-          },
-          lualine_y = {
-            { "progress", separator = " ", padding = { left = 1, right = 0 } },
-            { "location", padding = { left = 0, right = 1 } },
-          },
-          lualine_z = {
-            function()
-              return " " .. os.date("%R")
-            end,
-          },
-        },
-        extensions = { "neo-tree", "lazy", "fzf" },
-      }
-
-      -- do not add trouble symbols if aerial is enabled
-      -- And allow it to be overriden for some buffer types (see autocmds)
-      if vim.g.trouble_lualine and U.has("trouble.nvim") then
-        local trouble = require("trouble")
-        local symbols = trouble.statusline({
-          mode = "symbols",
-          groups = {},
-          title = false,
-          filter = { range = true },
-          format = "{kind_icon}{symbol.name:Normal}",
-          hl_group = "lualine_c_normal",
-        })
-        table.insert(opts.sections.lualine_c, {
-          symbols and symbols.get,
-          cond = function()
-            return vim.b.trouble_lualine ~= false and symbols.has()
-          end,
-        })
-      end
-
-      -- navic：在状态栏显示当前代码层级（函数/类面包屑）
-      table.insert(opts.sections.lualine_c, { "navic", color_correction = "dynamic" })
-
-      return opts
     end,
   },
 
@@ -477,7 +343,7 @@ return {
     end,
   },
 
-  -- nvim-navic：把当前代码层级（函数/类面包屑）提供给 lualine 显示
+  -- nvim-navic：把当前代码层级（函数/类面包屑）提供给状态栏显示
   {
     "SmiteshP/nvim-navic",
     lazy = true,
@@ -491,6 +357,8 @@ return {
       return {
         separator = " ",
         highlight = true,
+        -- safe_output：符号名里的字面 % 会被状态栏当成语法（%#组# / %l 之类），转义掉
+        safe_output = true,
         depth_limit = 5,
         icons = require("config.icons").icons.kinds,
         lazy_update_context = true,

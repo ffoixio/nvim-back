@@ -99,7 +99,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   end,
 })
 
--- NOTE: 插件会在配色之后才建自己的组（which-key / snacks / lualine…），所以 VeryLazy
+-- NOTE: 插件会在配色之后才建自己的组（which-key / snacks…），所以 VeryLazy
 -- 再刷一遍，跟 util/transparency.lua 同一个思路。
 vim.api.nvim_create_autocmd("User", {
   pattern = "VeryLazy",
