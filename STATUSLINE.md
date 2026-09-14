@@ -143,6 +143,7 @@ opt.statusline = [[%!v:lua.require('util.statusline').render()]]
 | 渲染成本 | `.test/probe/statusline_bench.lua` | `render()` 0.031 ms/次、`nvim_eval_statusline` 0.053 ms/次（验收线 0.15 ms）；`require` 0.23 ms、`build()` 0.14–0.26 ms |
 | 配置模块全量 require | `.test/probe/audit_modules.lua` | 成功 52 / 失败 0；`lazy.core.config.spec.plugins` 44 个，已无 `lualine.nvim` |
 | health | `nvim … -c 'lua dofile([[.test/probe/statusline_health.lua]])'` | ERROR 0 / WARNING 0 / OK 26（新增的「状态栏」小节贡献 3 条 ok），`messages` 0 报错 |
+| 高亮基线 | `.test/probe/hl.lua` 后 `diff .test/baseline/hl.txt .test/out/hl.txt` | 只差一行：`有底色的组 123 → 95`——正好是 28 个 `Navic*` 组从 mantle 实底改成跟随 StatusLine（扁平方案的预期变化）；`M.follow` 那 40 行逐字未变 |
 | 启动 | `--startuptime` ×3 | 27.1 / 28.1 / 30.6 ms（headless、无文件参数）。此前记录 24–26 ms，差值在环境噪声范围；lualine 本来就只在 VeryLazy 加载，headless 里不参与 |
 
 **观感变化**：状态栏从「色块 + powerline 箭头」变成扁平（只有前景色不同）。拆之前的 lualine 串留档：
