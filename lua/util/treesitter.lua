@@ -93,7 +93,7 @@ function M.ensure_treesitter_cli(cb)
   end
 
   if not pcall(require, "mason") then
-    return cb(false, "`mason.nvim` is disabled, so we cannot install it automatically.")
+    return cb(false, "`mason.nvim` 已停用（本机走系统工具链）：请用 pacman 装 `tree-sitter-cli`（提供 `tree-sitter`）")
   end
 
   if vim.fn.executable("tree-sitter") == 1 then

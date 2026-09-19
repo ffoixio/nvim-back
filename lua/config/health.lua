@@ -6,18 +6,25 @@
 --   4. 键位是否自洽（冲突 / 缺 desc）
 --   5. 模块登记（config/modules.lua 与 plugins/ 下实际文件是否对得上）
 --   6. 各语言就绪度（LSP / treesitter / 格式化 / lint；数据来自各语言模块自己的 register_lang）
---   7. mason 已装包一览
+--   7. 工具链（mason 是否停用 / 旧的 mason 包还剩多少 / 缺哪些系统包）
 -- 注：第 4 节的数据由各语言模块自己登记（plugins/lang/*.lua 里的 register_lang），这里不再维护副本。
 
 local M = {}
+local U = require("util.init")
 
 local data = vim.fn.stdpath("data")
 local mason_bin = data .. "/mason/bin/"
 local parser_dir = data .. "/site/parser/"
 
--- 找二进制：既查 PATH，也查 mason 的 bin（mason 未加载时 PATH 里可能没有）
+-- 找二进制：既查 PATH，也查 mason 的 bin（mason 未加载时 PATH 里可能没有）。
+-- 但走系统工具链时（Arch + 本机）mason 已停用，只认 PATH —— 否则会拿 mason 里残留的包
+-- 报「就绪」，掩盖真正还没用 pacman 装上的工具。
+local use_mason = not U.system_toolchain()
 local function have(bin)
-  return vim.fn.executable(bin) == 1 or vim.fn.executable(mason_bin .. bin) == 1
+  if vim.fn.executable(bin) == 1 then
+    return true
+  end
+  return use_mason and vim.fn.executable(mason_bin .. bin) == 1
 end
 
 -- 直接读 parser 目录，避免依赖 nvim-treesitter 是否已加载
@@ -308,13 +315,23 @@ function M.check()
     end
   end
 
-  h.start("config: mason 已装包")
-  local pkgs = {}
-  for _, p in ipairs(vim.fn.globpath(data .. "/mason/packages", "*", false, true)) do
-    pkgs[#pkgs + 1] = vim.fn.fnamemodify(p, ":t")
+  h.start("config: 工具链（mason / 系统）")
+  if U.system_toolchain() then
+    h.ok(("系统工具链模式：mason 不启用、不下载（Arch + hostname %s）"):format(
+      table.concat(vim.tbl_keys(U.my_hosts), ", ")))
+    local old = vim.fn.globpath(data .. "/mason/packages", "*", false, true)
+    if #old > 0 then
+      h.info(("旧的 mason 包还留着 %d 个；确认系统包齐了之后可以删掉 %s"):format(#old, data .. "/mason"))
+    end
+    h.info("工具 → 包名对照表：仓库根目录 SYSTEM-TOOLS.md；缺哪个看上面「语言就绪度」")
+  else
+    local pkgs = {}
+    for _, p in ipairs(vim.fn.globpath(data .. "/mason/packages", "*", false, true)) do
+      pkgs[#pkgs + 1] = vim.fn.fnamemodify(p, ":t")
+    end
+    table.sort(pkgs)
+    h.info(("mason 已装包 %d 个：%s"):format(#pkgs, table.concat(pkgs, " ")))
   end
-  table.sort(pkgs)
-  h.info(("共 %d 个：%s"):format(#pkgs, table.concat(pkgs, " ")))
 end
 
 return M

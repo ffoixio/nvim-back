@@ -205,4 +205,34 @@ function M.is_loaded(name)
   return Config.plugins[name] and Config.plugins[name]._.loaded
 end
 
+-- ===== 平台 / 机器判定 =====
+-- 「系统工具链」模式：Arch + 本机时不再用 mason.nvim 下载 LSP / lint / fmt，全部走 pacman / AUR
+-- （对照表见仓库根目录的 SYSTEM-TOOLS.md）。判据刻意保持简单：/etc/arch-release 存在 +
+-- hostname 在白名单里；换机器就把新 hostname 加进 M.my_hosts。
+
+--- 是否 Arch Linux
+---@return boolean
+function M.is_arch()
+  return vim.uv.fs_stat("/etc/arch-release") ~= nil
+end
+
+--- 我自己的机器（按 hostname 白名单；用 `hostnamectl --static` 看名字）
+---@type table<string, boolean>
+M.my_hosts = {
+  ["Windows-phont"] = true,
+}
+
+--- 当前是否跑在「我的 Arch 机器」上
+---@return boolean
+function M.is_my_machine()
+  local ok, host = pcall(vim.uv.os_gethostname)
+  return ok and type(host) == "string" and M.my_hosts[host] == true
+end
+
+--- 是否走系统工具链（= 不启用也不下载 mason.nvim）
+---@return boolean
+function M.system_toolchain()
+  return M.is_arch() and M.is_my_machine()
+end
+
 return M

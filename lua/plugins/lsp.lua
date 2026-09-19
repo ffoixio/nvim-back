@@ -253,6 +253,9 @@ return {
   {
 
     "mason-org/mason.nvim",
+    -- Arch + 本机（见 util/init.lua 的 system_toolchain）：LSP/lint/fmt 走 pacman/AUR，
+    -- 既不启用也不下载 mason。工具 → 包名对照表见 SYSTEM-TOOLS.md。
+    enabled = not U.system_toolchain(),
     cmd = "Mason",
     keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
     build = ":MasonUpdate",
