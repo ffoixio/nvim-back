@@ -120,3 +120,21 @@ vim.o.statusline = " %{v:lua.Status.mode()} | %{v:lua.Status.branch()} | %{v:lua
   注：**`dtd` 不是孤儿**——它是声明里 `xml` 的 `requires`（`parsers.lua:2284`），别删。
 - ~~透明模块的 `palette()` 只认 catppuccin~~：**已修（2026-09-13）**——运行时改成快照式（`ColorScheme` 抓原值 + 透明写 `NONE`），换主题也会重抓重刷；`palette()` 只剩 `M.always_opaque`（默认空）在用。
 - ~~启动耗时剖析~~：**已做（2026-09-13）** —— 实测总启动 ≈ 20ms，最大项是 `require("config.lazy")` ≈ 8.6ms、`config.autocmds` ≈ 0.13ms，没有值得优化的项。
+## 3. 宏录制（`Q`/`q`）疑似不可用（2026-09-13 发现，未修）
+
+- 现象：`lua/config/keymaps.lua:108-110` 把录制挪到了 `Q`（`q` 置成 `<Nop>` 防误触）。
+- 依据：`:h q` 明确写了 `q` 命令 **doesn't work inside a mapping and `:normal`**；而 `Q` 的 rhs 就是一个 `q`，
+  属于「在映射里执行 `q`」，所以按 `Q` 很可能起不了录制。
+- 真机确认（10 秒）：按 `Q` 后执行 `:lua print(vim.fn.reg_recording())` —— 应显示 `q`，显示空就是没起来；
+  顺带确认录制中按 `q` 能不能停（`q` 被映射成 `<Nop>`，可能被吃掉）。
+- 修法（待定）：改成 `expr` 映射，让 `q` 在「正在录制」时返回 `q`（停止）、否则返回 `<Nop>`；
+  `Q` 用真正能起录的方式（`feedkeys` 之类）。改完要真机验证。
+
+## 4. 用系统工具链取代 mason（2026-09-13，分支 `feat/system-toolchain`）
+
+- 决策：判定为 **Arch + 本机（hostname）** 时，**不启用也不下载 `mason.nvim`**；LSP / lint / fmt 一律走 pacman / AUR。
+  理由：个人配置本来就是声明式地维护系统包；Arch 的工具足够新、接近上游；mason 那套下载式管理在可控性和与系统工具链的一致性上都更差。
+- 判定函数：`lua/util/init.lua` 的 `M.system_toolchain()`（`/etc/arch-release` + `M.my_hosts` 白名单）。
+- 迁移对照表（哪个工具、对应哪个包、哪些只有 AUR）：见 `SYSTEM-TOOLS.md`。
+- 进度：判定 + 关闭 mason 已完成；**pacman 安装清单还没执行**，所以 health 的「语言就绪度」会先报缺哪些工具（这是预期）。
+
